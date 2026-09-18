@@ -42,6 +42,16 @@ public class Person: NSManagedObject {
     /// A system color name (e.g. "blue", "purple") used to tint this person's
     /// rows so the two earners are distinguishable at a glance.
     @NSManaged public var colorTag: String?
+    /// Soft-delete flag, same convention as `Account.isArchived` /
+    /// `Reminder.isArchived` (named `isArchived` because `NSManagedObject`
+    /// already defines `isDeleted`). Round 4: "delete person" archives rather
+    /// than hard-deleting, because the user must keep seeing an archived
+    /// person's past paychecks and direct deposits — `Paycheck.person` is
+    /// non-optional and every Home/Calendar/Paycheck read of
+    /// `paycheck.person.name` depends on that staying true. Archived people
+    /// stay fully visible in history; they just stop being offered for *new*
+    /// paychecks and accounts. Filter "current" lists with `isArchived == NO`.
+    @NSManaged public var isArchived: Bool
     @NSManaged public var createdAt: Date
     @NSManaged public var updatedAt: Date
 

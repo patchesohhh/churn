@@ -18,11 +18,41 @@ struct AddEditAccountView: View {
     /// be written once.
     let account: Account?
 
+    /// Round 4: when opening a brand-new account (`account == nil`) from an
+    /// `Offer` the user has actually gone and opened in real life, this
+    /// carries the offer whose fields should pre-fill the form so the user
+    /// isn't re-typing what they already entered as an offer. Ignored when
+    /// `account` is non-nil (editing an existing account never re-prefills
+    /// from an offer). `account.offer` is set to this on save so the link
+    /// persists — see `save()`.
+    var prefillFrom: Offer?
+
+    init(account: Account?, prefillFrom offer: Offer? = nil) {
+        self.account = account
+        self.prefillFrom = offer
+    }
+
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
-    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Person.name, ascending: true)])
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Person.name, ascending: true)],
+        predicate: NSPredicate(format: "isArchived == NO")
+    )
     private var people: FetchedResults<Person>
+
+    /// `people` (round 4: active-only, so an archived person can't be picked
+    /// for a *new* account) plus the currently-assigned person even if
+    /// they've since been archived — editing an existing account must never
+    /// silently lose/blank its owner just because that person was archived
+    /// after the fact.
+    private var pickerPeople: [Person] {
+        guard let existingOwner = account?.person, existingOwner.isArchived,
+              !people.contains(where: { $0.objectID == existingOwner.objectID }) else {
+            return Array(people)
+        }
+        return (Array(people) + [existingOwner]).sorted { $0.name < $1.name }
+    }
 
     // MARK: - Form state
     // Mirrors the Account entity's fields as plain SwiftUI-friendly state
@@ -64,7 +94,7 @@ struct AddEditAccountView: View {
     var body: some View {
         NavigationStack {
             Form {
-                if people.isEmpty {
+                if pickerPeople.isEmpty {
                     Section {
                         Label(
                             "Add a person in Settings before creating an account — bonuses are tracked per household earner.",
@@ -106,7 +136,7 @@ struct AddEditAccountView: View {
         Section("Person") {
             Picker("Account Owner", selection: $selectedPersonID) {
                 Text("Select a person").tag(NSManagedObjectID?.none)
-                ForEach(people, id: \.objectID) { person in
+                ForEach(pickerPeople, id: \.objectID) { person in
                     Text(person.name).tag(NSManagedObjectID?.some(person.objectID))
                 }
             }
@@ -284,7 +314,7 @@ struct AddEditAccountView: View {
     /// in the entity file), so "must be greater than zero" has to be
     /// enforced here in the form rather than at the store level.
     private var isValid: Bool {
-        guard !people.isEmpty, selectedPersonID != nil else { return false }
+        guard !pickerPeople.isEmpty, selectedPersonID != nil else { return false }
         guard !bankName.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
         // Bonus fields are only required when this account is actually
         // running a promotion — off, they're hidden and saved with sane
@@ -304,6 +334,9 @@ struct AddEditAccountView: View {
             // unselected so the picker forces an explicit choice.
             if people.count == 1 {
                 selectedPersonID = people.first?.objectID
+            }
+            if let offer = prefillFrom {
+                populateFromOffer(offer)
             }
             return
         }
@@ -332,6 +365,33 @@ struct AddEditAccountView: View {
         notes = account.notes ?? ""
     }
 
+    /// Round 4: "Open Account" from an `Offer` — the user has stored the
+    /// offer's terms already and gone and actually opened the account in
+    /// real life, so re-typing the bonus amount/requirements/eligibility
+    /// window would be pure busywork. Deliberately leaves account number
+    /// last-4, opening date, and person blank — those are real-world facts
+    /// only the user knows at the moment they're filling this form in, not
+    /// anything the offer could have predicted.
+    ///
+    /// `Offer` has no bonus *structure* field (lump sum vs. tiered/etc. — see
+    /// `Offer.swift`), so `bonusStructure` is left at its `.lumpSum` default
+    /// rather than guessed. `Offer.eligibilityRestrictionMonths` is the
+    /// closest match to `Account.eligibilityMonths`; when unset, the
+    /// existing `eligibilityMonths` default (12) is kept.
+    private func populateFromOffer(_ offer: Offer) {
+        bankName = offer.bankName
+        selectedBank = offer.bank
+        bonusAmountText = NSDecimalNumber(decimal: offer.bonusAmountDecimal).stringValue
+        bonusRequirements = offer.requirements
+        if let months = offer.eligibilityRestrictionMonths?.int16Value {
+            eligibilityMonths = months
+        }
+        // An account opened from an offer is definitionally a churn
+        // account, not a plain home account with no promo attached.
+        isChurnAccount = true
+        isHomeAccount = false
+    }
+
     // MARK: - Save
 
     private func save() {
@@ -343,6 +403,11 @@ struct AddEditAccountView: View {
             target.id = UUID()
             target.createdAt = Date()
             target.isArchived = false
+            // Persist the offer→account link for a brand-new account opened
+            // via "Open Account" on an offer. Never overwritten on edit of
+            // an existing account — `prefillFrom` is only ever set alongside
+            // `account == nil`.
+            target.offer = prefillFrom
         }
 
         target.person = viewContext.object(with: selectedPersonID) as? Person
@@ -407,6 +472,16 @@ struct AddEditAccountView: View {
         .first { $0.isHomeAccount && !$0.isChurnAccount }
 
     return AddEditAccountView(account: account)
+        .environment(\.managedObjectContext, context)
+}
+
+#Preview("Prefilled from an offer") {
+    // Confirms bonus amount/requirements/eligibility pre-populate and
+    // isChurnAccount/isHomeAccount land in their offer-sourced defaults.
+    let context = PersistenceController.preview.container.viewContext
+    let offer = (try? context.fetch(Offer.fetchRequest()))?.first
+
+    return AddEditAccountView(account: nil, prefillFrom: offer)
         .environment(\.managedObjectContext, context)
 }
 

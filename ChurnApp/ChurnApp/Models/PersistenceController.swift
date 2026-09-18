@@ -86,6 +86,9 @@ struct PersistenceController {
         // store and one user this should never actually arbitrate anything, but
         // it prevents a hard merge-conflict throw if it ever does.
         container.viewContext.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
+
+        // Round 4: automatic, data-derived notifications — see Services/AutomaticNotificationService.swift.
+        AutomaticNotificationService.start(context: container.viewContext)
     }
 
     // MARK: - Saving

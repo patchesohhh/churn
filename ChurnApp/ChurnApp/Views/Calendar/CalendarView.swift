@@ -12,24 +12,42 @@
 //  effectively-open-ended list".
 //
 //  HOW PROJECTION WORKS (read this before changing the generation logic):
-//  - For each `Person` with a `nextPaycheckDate` set, a non-`.irregular`
-//    `payFrequency`, and at least one real `Paycheck` on record (there's
-//    nothing to repeat otherwise), we generate `projectionCount` (12, see
-//    below) future occurrences starting at `nextPaycheckDate` and stepping
-//    forward by `payFrequency` each time.
-//  - Each occurrence repeats the *split pattern* (which accounts, which
-//    amounts) of that person's most recent real `Paycheck`
-//    (`person.paychecksArray.first`) verbatim — "same amounts" is the
-//    simplest reading of "if none of the allocations change" from the spec,
-//    and avoids guessing at a scaling factor nothing in the schema informs.
-//  - Promotion-end awareness (the one rule worth re-reading twice): a split
-//    is dropped from a *projected* occurrence when its account's
-//    `actualBonusDate != nil` — the bonus already posted, so there's no
-//    more reason to keep feeding that account. Dropping a split from the
-//    generated list, rather than re-summing it elsewhere, is enough on its
-//    own to "redirect" that money into the projected remainder — the
-//    remainder is computed as total minus whatever splits remain, exactly
-//    like `Paycheck.unallocatedAmountDecimal` does for real rows.
+//  - For each `Person` with a `nextPaycheckDate` set and a non-`.irregular`
+//    `payFrequency`, we generate `projectionCount` (12, see below) future
+//    occurrences starting at `nextPaycheckDate` and stepping forward by
+//    `payFrequency` each time. **A real `Paycheck` on record is NOT
+//    required** — round 4 fixed a bug where projection only ran for a
+//    person who already had at least one real paycheck to repeat, which
+//    defeated the entire point of `Person` setup (income profile) being
+//    enough on its own to forecast a schedule. See CLAUDE.md, "Round 4
+//    changes" → "Calendar projection must not require an existing real
+//    `Paycheck`."
+//  - **If the person has at least one real `Paycheck`**
+//    (`person.paychecksArray.first`), each occurrence repeats that
+//    paycheck's *split pattern* (which accounts, which amounts) verbatim —
+//    "same amounts" is the simplest reading of "if none of the allocations
+//    change" from the spec, and avoids guessing at a scaling factor
+//    nothing in the schema informs. Promotion-end awareness (the one rule
+//    worth re-reading twice): a split is dropped from a *projected*
+//    occurrence when its account's `actualBonusDate != nil` — the bonus
+//    already posted, so there's no more reason to keep feeding that
+//    account. Dropping a split from the generated list, rather than
+//    re-summing it elsewhere, is enough on its own to "redirect" that
+//    money into the projected remainder — the remainder is computed as
+//    total minus whatever splits remain, exactly like
+//    `Paycheck.unallocatedAmountDecimal` does for real rows.
+//  - **If the person has zero real paychecks**, there's no split pattern
+//    to repeat yet, so every occurrence uses `person.paycheckAmountDecimal`
+//    as the total with **no explicit splits** — 100% of it is the
+//    projected remainder. The remainder is attributed to the person's own
+//    home account when they have one set (same default
+//    `AddEditPaycheckView` uses when creating a real paycheck for them),
+//    purely for display; projection never blocks on a remainder account
+//    existing.
+//  - Real, persisted `Paycheck`s are never touched by any of this — this
+//    whole function only ever produces `ProjectedPaycheck` values, which
+//    are display-only until materialized. See "Historical immutability"
+//    in CLAUDE.md's round 4 section for the invariant this preserves.
 //  - Why 12 occurrences (not a fixed time window): pay frequency varies
 //    from weekly to monthly per person, so a fixed multi-month window would
 //    show very different list lengths for a weekly vs. monthly earner. A
@@ -59,7 +77,15 @@ struct CalendarView: View {
 
     /// Drives both "who is this new paycheck for" and the projection
     /// generation below.
-    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Person.name, ascending: true)])
+    // Round 4: active-only -- this feeds the *projection* loop below only.
+    // Archiving a person must stop generating new future projected
+    // paychecks for them, but their real, persisted Paycheck rows are
+    // fetched separately (see `paychecks` below) and are never filtered by
+    // this predicate, so their history stays fully visible.
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Person.name, ascending: true)],
+        predicate: NSPredicate(format: "isArchived == NO")
+    )
     private var people: FetchedResults<Person>
 
     @Environment(\.managedObjectContext) private var viewContext
@@ -232,12 +258,12 @@ struct CalendarView: View {
     // MARK: - Empty state
 
     /// Exact copy "No Paychecks Scheduled" per CLAUDE.md, unchanged from
-    /// round 2. Only reachable now when there are zero real paychecks AND
-    /// nothing to project — and generating a projection always requires an
-    /// existing real paycheck to repeat the split pattern of (see
-    /// `projectedPaychecks` below), so "no real paychecks" already implies
-    /// "no projections" too. The action below only appears once a Person
-    /// exists to attach the new paycheck to.
+    /// round 2. Reachable only when there's no Person at all, or every
+    /// Person is missing `nextPaycheckDate`/has `.irregular` frequency —
+    /// as of round 4, a Person with income-profile data set but zero real
+    /// paychecks logged still projects a schedule (see `projectedPaychecks`
+    /// below), so this state is rarer than it used to be. The action below
+    /// only appears once a Person exists to attach the new paycheck to.
     private var emptyState: some View {
         Group {
             if people.isEmpty {
@@ -317,15 +343,34 @@ struct CalendarView: View {
             // than produce a bogus forecast — an irregular earner has no
             // cadence to step forward by, so they only ever show real rows.
             guard person.payFrequencyValue.paychecksPerYear > 0 else { continue }
-            // Nothing to repeat without a real paycheck on record.
-            guard let lastReal = person.paychecksArray.first else { continue }
 
-            let pattern: [(account: Account, amount: Decimal)] = lastReal.directDepositsArray.compactMap { deposit in
+            // Two modes, chosen once per person up front (not required to
+            // repeat a real paycheck any more — see the file header comment
+            // and CLAUDE.md's round 4 section). `lastReal == nil` is the
+            // exact case that used to be skipped entirely, which is why a
+            // freshly-set-up second person's schedule never appeared.
+            let lastReal = person.paychecksArray.first
+
+            // NOTE: reads only `lastReal`'s *own* stored fields
+            // (`totalAmountDecimal`, its `directDepositsArray` amounts,
+            // `remainderAccount`) — never live `Person`/`Account` data — so
+            // this never risks redrawing a real Paycheck from current data.
+            // The `else` branch below reads `person.paycheckAmountDecimal`
+            // live, but only to seed *projected* (not-yet-real) entries,
+            // which is exactly what's supposed to track a raise going
+            // forward.
+            let pattern: [(account: Account, amount: Decimal)] = lastReal?.directDepositsArray.compactMap { deposit in
                 guard let account = deposit.account else { return nil }
                 return (account, deposit.amountDecimal)
-            }
+            } ?? []
 
-            let remainderAccount = lastReal.remainderAccount
+            let totalAmount = lastReal?.totalAmountDecimal ?? person.paycheckAmountDecimal
+            // Real paycheck on record: keep its own remainder-account
+            // choice. No real paycheck yet: fall back to the person's own
+            // home account, same default `AddEditPaycheckView` uses when
+            // first creating a real paycheck for them — display-only, never
+            // required for projection to proceed.
+            let remainderAccount = lastReal?.remainderAccount ?? person.accountsArray.first(where: { $0.isHomeAccount })
 
             var payDate = start
             for occurrence in 0..<Self.projectionCount {
@@ -345,13 +390,17 @@ struct CalendarView: View {
                         )
                     )
                 }
+                // When there's no real paycheck yet, `pattern` is empty, so
+                // `splits` stays empty too — 100% of `totalAmount` falls
+                // through to `remainderAmount`, exactly as the round 4 fix
+                // requires.
 
                 results.append(
                     ProjectedPaycheck(
                         id: "\(person.id.uuidString)-\(occurrence)",
                         person: person,
                         payDate: payDate,
-                        totalAmount: lastReal.totalAmountDecimal,
+                        totalAmount: totalAmount,
                         splits: splits,
                         remainderAccount: remainderAccount
                     )
@@ -602,10 +651,13 @@ private struct ProjectedPaycheckRow: View {
 }
 
 #Preview("Empty, with a person") {
-    // A person exists but hasn't logged a paycheck yet — the empty state's
-    // "Add Paycheck" action should be live in this state. Also exercises
-    // "nothing to project": a person with no real paycheck yet has no
-    // pattern to repeat, so projections stay empty too.
+    // A person exists but hasn't set `nextPaycheckDate` yet (income amount
+    // and frequency alone aren't enough to project from — a starting date
+    // is required too), so there's nothing to project and no real paycheck
+    // logged either. The empty state's "Add Paycheck" action should be live
+    // in this state. Contrast with "Projected only, zero real paychecks"
+    // below, which is the same setup *plus* a `nextPaycheckDate` — that one
+    // must show a full projected schedule, not this empty state.
     let controller = PersistenceController(inMemory: true)
     let context = controller.container.viewContext
 
@@ -617,6 +669,52 @@ private struct ProjectedPaycheckRow: View {
     person.maxConcurrentDirectDeposits = 3
     person.createdAt = Date()
     person.updatedAt = Date()
+
+    return CalendarView()
+        .environment(\.managedObjectContext, context)
+}
+
+#Preview("Projected only, zero real paychecks (round 4 fix)") {
+    // The exact bug scenario from CLAUDE.md's round 4 section: a person
+    // with a full income profile (amount, next date, frequency) but zero
+    // real `Paycheck` rows logged. Before the fix, `projectedPaychecks`
+    // skipped this person entirely (nothing to repeat a split pattern
+    // from) — the Calendar showed nothing for them even though setup was
+    // complete. Now it projects `projectionCount` occurrences using
+    // `person.paycheckAmountDecimal` as each total, 100% unsplit into the
+    // remainder (dashed "Projected" rows, no split-count badge above "0
+    // splits (upcoming)"). Also gives them a home account so the remainder
+    // shows a concrete destination rather than "no destination set."
+    let controller = PersistenceController(inMemory: true)
+    let context = controller.container.viewContext
+
+    let person = Person(context: context)
+    person.id = UUID()
+    person.name = "Jordan"
+    person.payFrequency = PayFrequency.biweekly.rawValue
+    person.paycheckAmount = NSDecimalNumber(string: "2450.00")
+    person.nextPaycheckDate = Calendar.current.date(byAdding: .day, value: 5, to: Date())
+    person.maxConcurrentDirectDeposits = 3
+    person.createdAt = Date()
+    person.updatedAt = Date()
+
+    let homeAccount = Account(context: context)
+    homeAccount.id = UUID()
+    homeAccount.bankName = "Ally"
+    homeAccount.accountNumberLast4 = "9042"
+    homeAccount.accountType = AccountType.checking.rawValue
+    homeAccount.openingDate = Date()
+    homeAccount.bonusAmount = NSDecimalNumber(string: "0")
+    homeAccount.bonusStructure = BonusStructure.lumpSum.rawValue
+    homeAccount.bonusRequirements = ""
+    homeAccount.accountStatus = AccountStatus.open.rawValue
+    homeAccount.eligibilityMonths = 12
+    homeAccount.isArchived = false
+    homeAccount.isHomeAccount = true
+    homeAccount.isChurnAccount = false
+    homeAccount.createdAt = Date()
+    homeAccount.updatedAt = Date()
+    homeAccount.person = person
 
     return CalendarView()
         .environment(\.managedObjectContext, context)

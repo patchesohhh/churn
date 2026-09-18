@@ -114,6 +114,7 @@
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="defaultBankName" optional="YES" attributeType="String"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isArchived" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="maxConcurrentDirectDeposits" attributeType="Integer 16" minValueString="0" defaultValueString="1" usesScalarValueType="YES"/>
         <attribute name="name" attributeType="String"/>
         <attribute name="nextPaycheckDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -125,6 +126,9 @@
         <relationship name="paychecks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Paycheck" inverseName="person" inverseEntity="Paycheck"/>
         <fetchIndex name="byName">
             <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byIsArchived">
+            <fetchIndexElement property="isArchived" type="Binary" order="ascending"/>
         </fetchIndex>
     </entity>
     <entity name="Reminder" representedClassName="Reminder" syncable="YES">

@@ -42,6 +42,10 @@ struct PersonSetupView: View {
     @State private var savedPerson: Person?
     @State private var isPresentingAddPaycheck = false
 
+    /// Round 4: "Delete Person" is a *soft* delete (`person.isArchived = true`),
+    /// never `context.delete(person)` — see CLAUDE.md. History must survive.
+    @State private var isConfirmingDelete = false
+
     private var isEditing: Bool { person != nil }
 
     /// Small, fixed palette of system color names for telling the two
@@ -67,6 +71,10 @@ struct PersonSetupView: View {
             payStructureSection
             directDepositSection
             colorSection
+            // Edit mode only — there's nothing to delete in the "add" flow.
+            if isEditing {
+                deleteSection
+            }
         }
         .navigationTitle(isEditing ? "Edit Person" : "Add Person")
         .toolbarTitleDisplayMode(.inline)
@@ -101,6 +109,19 @@ struct PersonSetupView: View {
             if let savedPerson {
                 AddEditPaycheckView(person: savedPerson, paycheck: nil)
             }
+        }
+        // Reassurance is the whole point of this dialog: the user is pressing
+        // a destructive-looking button and needs to know their bookkeeping
+        // history isn't going anywhere.
+        .confirmationDialog(
+            "Delete \(person?.name ?? "Person")?",
+            isPresented: $isConfirmingDelete,
+            titleVisibility: .visible
+        ) {
+            Button("Delete Person", role: .destructive) { archivePerson() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This keeps \(person?.name ?? "this person")'s paycheck and account history — it just stops them from being offered for new paychecks and accounts.")
         }
     }
 
@@ -197,6 +218,20 @@ struct PersonSetupView: View {
         }
     }
 
+    /// Bottom-of-form destructive action, per the user's request. Only built
+    /// in edit mode (see `body`).
+    private var deleteSection: some View {
+        Section {
+            Button(role: .destructive) {
+                isConfirmingDelete = true
+            } label: {
+                Label("Delete Person", systemImage: "trash")
+            }
+        } footer: {
+            Text("Their past paychecks, direct deposits, and accounts stay exactly as they are.")
+        }
+    }
+
     // MARK: - Validation
 
     private var paycheckAmountDecimal: Decimal? {
@@ -261,6 +296,26 @@ struct PersonSetupView: View {
             }
         } catch {
             assertionFailure("Failed to save person: \(error)")
+        }
+    }
+
+    // MARK: - Soft delete
+
+    /// Sets the archive flag and saves — deliberately NOT
+    /// `viewContext.delete(person)`. A real delete would cascade through
+    /// `Person.paychecks` (and their `DirectDeposit` splits) and wipe the
+    /// history the user still needs to see. CLAUDE.md, round 4.
+    private func archivePerson() {
+        guard let person else { return }
+
+        person.isArchived = true
+        person.updatedAt = Date()
+
+        do {
+            try viewContext.save()
+            dismiss()
+        } catch {
+            assertionFailure("Failed to archive person: \(error)")
         }
     }
 }

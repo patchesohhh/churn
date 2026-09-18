@@ -37,7 +37,14 @@ struct HomeView: View {
 
     /// Every `Person` — used only to detect first-run ("no one has set up an
     /// income profile yet") and to resolve who "Add Paycheck" should target.
-    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Person.createdAt, ascending: true)])
+    // Round 4: active-only -- archiving the household's only person should
+    // put Home back into first-run state (nobody active to route a paycheck
+    // to), not leave it stuck showing the populated layout for a person who
+    // no longer appears anywhere else in the app.
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Person.createdAt, ascending: true)],
+        predicate: NSPredicate(format: "isArchived == NO")
+    )
     private var people: FetchedResults<Person>
 
     /// Upcoming paychecks (today or later), soonest first — round 2 moves
@@ -212,16 +219,42 @@ struct HomeView: View {
         }
     }
 
-    /// Native, center-aligned, looping, peeking carousel. `GeometryReader`
-    /// gives us the available width so the card can be sized narrower than
-    /// the screen (with the remainder split evenly as leading/trailing
-    /// scroll-view padding) — that's what makes the neighboring cards peek
-    /// in slightly at both edges while the centered card still reads as
-    /// "the" card. No page dots per the round 3 spec.
+    /// Native, center-aligned, looping, peeking carousel.
+    ///
+    /// Round 3's first attempt sized each card with a `GeometryReader`-
+    /// computed `cardWidth` plus manual `.safeAreaPadding(.horizontal:)` to
+    /// leave peeking room on both sides. That doesn't work: `.viewAligned`
+    /// snaps an item's *leading* edge to the scroll view's leading content
+    /// inset, not its center — equal leading/trailing safe-area padding
+    /// doesn't change that alignment, it only changes how much of the
+    /// neighboring items happen to be visible around whichever edge is
+    /// actually anchored. The visible symptom matched exactly: the previous
+    /// card's trailing ~2/3 hanging in on the left, current card jammed into
+    /// the right third.
+    ///
+    /// The fix is Apple's documented pattern (WWDC22 "What's new in
+    /// SwiftUI"): size each item with `.containerRelativeFrame(.horizontal:
+    /// count:span:spacing:)` instead of a manual fixed width. That, combined
+    /// with `.scrollTargetLayout()` + `.scrollTargetBehavior(.viewAligned)`,
+    /// gives each item's *center* as its snap target (not its leading edge),
+    /// which is what actually produces "one item centered, neighbors peek in
+    /// symmetrically". `count: 5, span: 4` makes each card ~4/5 (80%) of the
+    /// scroll view's width, matching the original 0.82 ratio closely enough
+    /// to leave two even slivers peeking at both edges. No `GeometryReader`
+    /// or manual `safeAreaPadding` needed anymore.
     private var earningsCarousel: some View {
         GeometryReader { geometry in
-            let cardWidth = geometry.size.width * 0.82
-            let sidePadding = (geometry.size.width - cardWidth) / 2
+            // Symmetric leading/trailing inset — half of the "5th slice"
+            // that `containerRelativeFrame(count: 5, span: 4)` below leaves
+            // unused. Without this, the scroll content has zero inset, so
+            // item 0's *leading* edge sits flush at x = 0 and `.viewAligned`
+            // (whose snap point is the visible content region's center)
+            // ends up centering on a region that starts at the screen edge
+            // — i.e. the card reads as left-anchored, not centered. This is
+            // the one piece round 3's `GeometryReader` math actually had
+            // right; what round 3 got wrong was sizing the item with a
+            // manual `.frame(width:)` instead of `containerRelativeFrame`.
+            let sidePadding = geometry.size.width / 10
 
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 12) {
@@ -232,11 +265,13 @@ struct HomeView: View {
                             subtitle: item.subtitle,
                             valueColor: item.valueColor
                         )
-                        .frame(width: cardWidth)
+                        .containerRelativeFrame(
+                            .horizontal, count: 5, span: 4, spacing: 12
+                        )
                     }
                 }
-                // Required for `.scrollTargetBehavior(.viewAligned)` below to
-                // know where each item's snap point is.
+                // Required for `.scrollTargetBehavior(.viewAligned)` below
+                // to know where each item's snap point is.
                 .scrollTargetLayout()
             }
             .safeAreaPadding(.horizontal, sidePadding)
@@ -247,7 +282,7 @@ struct HomeView: View {
             }
         }
         // Fixed height: a `GeometryReader`/`ScrollView` combo won't size
-        // itself to a `StatCard`'s intrinsic height the way a plain VStack
+        // itself to a `StatCard`'s intrinsic height the way a plain `VStack`
         // would.
         .frame(height: 150)
     }

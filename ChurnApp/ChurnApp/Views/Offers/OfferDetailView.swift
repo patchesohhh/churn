@@ -18,6 +18,11 @@ struct OfferDetailView: View {
 
     @State private var isPresentingEdit = false
     @State private var isPresentingDeleteConfirmation = false
+    /// Round 4: "Open Account" — the user has stored this offer and actually
+    /// gone and opened the account in real life, so jump straight into a
+    /// pre-filled `AddEditAccountView` instead of making them re-type the
+    /// bonus amount/requirements/eligibility window by hand.
+    @State private var isPresentingOpenAccount = false
 
     var body: some View {
         List {
@@ -31,6 +36,15 @@ struct OfferDetailView: View {
                         .foregroundStyle(.secondary)
                     MoneyText(amount: offer.bonusAmountDecimal, size: .large, color: .green)
                         .padding(.top, 4)
+
+                    Button {
+                        isPresentingOpenAccount = true
+                    } label: {
+                        Label("Open Account", systemImage: "banknote")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .padding(.top, 8)
 
                     HStack(spacing: 8) {
                         if offer.isFavorite {
@@ -137,6 +151,9 @@ struct OfferDetailView: View {
         }
         .sheet(isPresented: $isPresentingEdit) {
             AddEditOfferView(offer: offer)
+        }
+        .sheet(isPresented: $isPresentingOpenAccount) {
+            AddEditAccountView(account: nil, prefillFrom: offer)
         }
         .confirmationDialog(
             "Delete this offer?",

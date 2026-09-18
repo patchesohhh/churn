@@ -476,6 +476,48 @@ final class BankPaycheckTests: XCTestCase {
         XCTAssertTrue(CalculationService.isEligible(person: person, bankName: "SoFi", asOf: asOf))
     }
 
+    // MARK: - Historical immutability (round 4 hard invariant)
+
+    /// CLAUDE.md's round 4 section: a real, persisted `Paycheck`'s stored
+    /// `totalAmountDecimal` and its `DirectDeposit` splits are a snapshot
+    /// taken at creation/edit time. A person's pay raise (or any other edit
+    /// to live `Person`/`Account` data) must only ever affect *future*
+    /// projected/new paychecks — never rewrite one that already happened.
+    /// This is true structurally (`Paycheck.totalAmountDecimal` and
+    /// `DirectDeposit.amountDecimal` are stored attributes, never computed
+    /// from `Person.paycheckAmountDecimal`), but this test pins that down
+    /// so a future change that tries to "helpfully" recompute a real
+    /// paycheck from current Person data gets caught immediately.
+    func testHistoricalImmutability_personPayRaiseDoesNotRewriteExistingPaycheck() throws {
+        let person = makePerson()
+        person.paycheckAmount = NSDecimalNumber(string: "2400.00")
+
+        // A real paycheck logged *before* the raise, with its own splits.
+        let paycheck = makePaycheck(person: person, total: "2400.00", payDate: date(year: 2026, month: 8, day: 15))
+        let account = makeAccount(person: person)
+        let split = makeSplit(of: paycheck, amount: "1000.00", account: account, sequence: 1)
+        try context.save()
+
+        XCTAssertEqual(paycheck.totalAmountDecimal, Decimal(string: "2400.00"))
+        XCTAssertEqual(split.amountDecimal, Decimal(string: "1000.00"))
+
+        // The raise: only `Person.paycheckAmountDecimal` changes. Nothing
+        // about the already-real paycheck or its splits is touched.
+        person.paycheckAmountDecimal = Decimal(string: "2900.00")!
+        try context.save()
+
+        XCTAssertEqual(person.paycheckAmountDecimal, Decimal(string: "2900.00"), "The raise itself should have taken effect on Person.")
+        XCTAssertEqual(paycheck.totalAmountDecimal, Decimal(string: "2400.00"), "A past real Paycheck's total must never track a later Person pay-rate change.")
+        XCTAssertEqual(split.amountDecimal, Decimal(string: "1000.00"), "A past real Paycheck's splits must never be recomputed from current data either.")
+
+        // Refetching from the store (not just reading the in-memory object)
+        // rules out a stale-cache false positive.
+        let request = NSFetchRequest<Paycheck>(entityName: "Paycheck")
+        request.predicate = NSPredicate(format: "id == %@", paycheck.id as CVarArg)
+        let refetched = try XCTUnwrap(try context.fetch(request).first)
+        XCTAssertEqual(refetched.totalAmountDecimal, Decimal(string: "2400.00"))
+    }
+
     // MARK: - Preview stack integration
 
     /// The shared seed data must exercise the round-2 schema, since every
