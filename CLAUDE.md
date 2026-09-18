@@ -508,13 +508,45 @@ Direct Deposit function to the proper bank accounts." Concretely:
   path** (the existing `.navigationDestination(for:)` pattern already
   does this automatically — nothing changes about how you push, only
   about how the stack resets).
-- Reported and being fixed this round: a crash confirming paycheck
-  delete (`PaycheckDetailView`), a blank modal from PersonSetupView's
-  "set up first paycheck?" flow, being able to create duplicate `Person`
-  rows, a real `Paycheck` and its own projected-future counterpart both
-  showing in Calendar for the same date, and Open-Account-from-Offer not
-  navigating anywhere after save. See task list / commit history for the
-  specifics of each fix.
+- **Paycheck delete crash — diagnosed.** `PaycheckDetailView.delete()`
+  calls `viewContext.delete(paycheck)` + `save()` *before* `dismiss()`.
+  Since `paycheck` is an `@ObservedObject`, the deletion's
+  `objectWillChange` fires a `body` re-render before `dismiss()` takes
+  effect, and `paycheck.payDate`/`paycheck.person.name` get accessed on a
+  now-deleted managed object — crash. Fix at the ordering/guarding level
+  (dismiss before delete, or guard `body` against a deleted/faulted
+  object), not by touching what gets deleted.
+- **PersonSetupView "set up first paycheck?" — two bugs, one root cause.**
+  The confirmation dialog's `isPresented` is a custom `Binding` whose
+  `set` nils `savedPerson` as a side effect of the dialog dismissing —
+  this races against the "Set Up First Paycheck" button's own action, so
+  by the time `.sheet(isPresented:) { if let savedPerson { ... } }`
+  evaluates, `savedPerson` can already be nil → blank sheet. Fix: capture
+  the person into its own state (e.g. `.sheet(item:)` instead of
+  `isPresented` + `if let`), decoupled from the dialog's dismiss-binding.
+  Second bug, same neighborhood: dismissing the "set up first paycheck?"
+  dialog by tapping *outside* it (not choosing a button) doesn't dismiss
+  `PersonSetupView` itself — the add-person form is still sitting there,
+  fully filled in, Save still enabled, and `save()`'s add-mode branch
+  unconditionally creates a new `Person` — so a second tap of Save
+  creates a duplicate. Fix by guarding against a second create once a
+  person has already been saved in this session (disable Save, or make
+  a second save update the already-created person instead of inserting
+  another).
+- **Calendar showing both a real paycheck and its own projection.** Once
+  a projected occurrence is materialized into a real `Paycheck`, the
+  projection generator has no way to know that date/person combination
+  is now "real" — it keeps generating a projected entry for the same
+  slot alongside the real one. Fix: the projection loop must skip any
+  occurrence whose date+person already has a matching real `Paycheck`.
+- **Open Account from Offer doesn't navigate anywhere after save.** Per
+  the user: after confirming, they expect to land on the Accounts tab
+  with the new account visible at the top. Use `AppTabSelection` (same
+  mechanism as Home's "View Full Schedule") to switch to `.accounts`
+  after a successful prefilled save, and confirm `AccountsListView`'s
+  default sort actually surfaces a brand-new account at the top (it
+  should, sorted by `openingDate` — verify the new account's
+  `openingDate` default and the sort direction agree).
 
 ## Explicitly out of scope for this build
 
