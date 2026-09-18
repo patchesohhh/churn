@@ -132,8 +132,12 @@ struct AccountsListView: View {
         account.expectedBonusDate ?? account.actualBonusDate
     }
 
+    @Environment(AppTabSelection.self) private var tabSelection
+
     var body: some View {
-        NavigationStack {
+        @Bindable var tabSelection = tabSelection
+
+        NavigationStack(path: $tabSelection.accountsPath) {
             Group {
                 if accounts.isEmpty {
                     EmptyStateView(
@@ -366,11 +370,13 @@ struct AccountsListView: View {
 #Preview("Populated") {
     AccountsListView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Empty") {
     AccountsListView()
         .environment(\.managedObjectContext, PersistenceController(inMemory: true).container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Filtered to no matches") {
@@ -378,10 +384,12 @@ struct AccountsListView: View {
     // account opened in 1999, so this preset filter lands directly on it.
     AccountsListView(initialYear: 1999)
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Dark mode") {
     AccountsListView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
         .preferredColorScheme(.dark)
 }

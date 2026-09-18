@@ -26,8 +26,12 @@ struct SettingsView: View {
     )
     private var accounts: FetchedResults<Account>
 
+    @Environment(AppTabSelection.self) private var tabSelection
+
     var body: some View {
-        NavigationStack {
+        @Bindable var tabSelection = tabSelection
+
+        NavigationStack(path: $tabSelection.settingsPath) {
             List {
                 peopleSection
                 taxSummarySection
@@ -156,15 +160,18 @@ private struct PersonRow: View {
 #Preview("Populated") {
     SettingsView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Empty") {
     SettingsView()
         .environment(\.managedObjectContext, PersistenceController(inMemory: true).container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Dark mode") {
     SettingsView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
         .preferredColorScheme(.dark)
 }

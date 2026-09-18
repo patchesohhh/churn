@@ -495,6 +495,27 @@ Direct Deposit function to the proper bank accounts." Concretely:
   - **Update-DD trigger**: within 5 days of a person's (projected) next pay date, unless a `DirectDeposit` already exists within a few days of that date (the "already handled" check — deliberately conservative, since a false nag is worse than an occasional missed one).
   - This is an explicit first pass, not the full notification system — extend the two-trigger pattern as more signals get identified.
 
+## Round 5 changes — bug fixes from real device testing
+
+- **Tab navigation resets on leave, not on return.** Every tab root now
+  binds its `NavigationStack` to a path owned by `AppTabSelection`
+  (`homePath`/`calendarPath`/`accountsPath`/`offersPath`/`settingsPath`)
+  instead of an implicit/local one. `ContentView` resets a tab's path the
+  moment `.onChange(of: tabSelection.selected)` fires for the tab being
+  left — so switching away and back always lands on that tab's root,
+  instead of SwiftUI's default of leaving a pushed detail view sitting
+  there. **Any new pushed view on a tab root must go through that tab's
+  path** (the existing `.navigationDestination(for:)` pattern already
+  does this automatically — nothing changes about how you push, only
+  about how the stack resets).
+- Reported and being fixed this round: a crash confirming paycheck
+  delete (`PaycheckDetailView`), a blank modal from PersonSetupView's
+  "set up first paycheck?" flow, being able to create duplicate `Person`
+  rows, a real `Paycheck` and its own projected-future counterpart both
+  showing in Calendar for the same date, and Open-Account-from-Offer not
+  navigating anywhere after save. See task list / commit history for the
+  specifics of each fix.
+
 ## Explicitly out of scope for this build
 
 - Vertical Gantt chart with visual DD connectors (Calendar tab ships as a

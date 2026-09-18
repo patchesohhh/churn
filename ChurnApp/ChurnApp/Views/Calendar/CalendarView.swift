@@ -105,8 +105,12 @@ struct CalendarView: View {
     /// time window.
     private static let projectionCount = 12
 
+    @Environment(AppTabSelection.self) private var tabSelection
+
     var body: some View {
-        NavigationStack {
+        @Bindable var tabSelection = tabSelection
+
+        NavigationStack(path: $tabSelection.calendarPath) {
             Group {
                 if entries.isEmpty {
                     emptyState
@@ -625,6 +629,7 @@ private struct ProjectedPaycheckRow: View {
 #Preview("Populated (real + projected)") {
     CalendarView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Projection with a promotion that already ended") {
@@ -640,6 +645,7 @@ private struct ProjectedPaycheckRow: View {
 
     return CalendarView()
         .environment(\.managedObjectContext, context)
+        .environment(AppTabSelection())
 }
 
 #Preview("Empty, no person yet") {
@@ -648,6 +654,7 @@ private struct ProjectedPaycheckRow: View {
     // with no Person to attach a paycheck to.
     CalendarView()
         .environment(\.managedObjectContext, PersistenceController(inMemory: true).container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Empty, with a person") {
@@ -672,6 +679,7 @@ private struct ProjectedPaycheckRow: View {
 
     return CalendarView()
         .environment(\.managedObjectContext, context)
+        .environment(AppTabSelection())
 }
 
 #Preview("Projected only, zero real paychecks (round 4 fix)") {
@@ -718,6 +726,7 @@ private struct ProjectedPaycheckRow: View {
 
     return CalendarView()
         .environment(\.managedObjectContext, context)
+        .environment(AppTabSelection())
 }
 
 #Preview("Materialize flow (tap a projected entry)") {
@@ -726,10 +735,12 @@ private struct ProjectedPaycheckRow: View {
     // watch it turn into a real row and open the edit sheet.
     CalendarView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Dark mode") {
     CalendarView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
         .preferredColorScheme(.dark)
 }

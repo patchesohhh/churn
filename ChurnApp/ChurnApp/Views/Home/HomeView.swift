@@ -98,7 +98,9 @@ struct HomeView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        @Bindable var tabSelection = tabSelection
+
+        NavigationStack(path: $tabSelection.homePath) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
                     // Always at the top, always rendered — never hidden

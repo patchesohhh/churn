@@ -27,11 +27,14 @@ struct OffersListView: View {
     private var offers: FetchedResults<Offer>
 
     @Environment(\.managedObjectContext) private var viewContext
+    @Environment(AppTabSelection.self) private var tabSelection
 
     @State private var isPresentingAddOffer = false
 
     var body: some View {
-        NavigationStack {
+        @Bindable var tabSelection = tabSelection
+
+        NavigationStack(path: $tabSelection.offersPath) {
             Group {
                 if offers.isEmpty {
                     EmptyStateView(
@@ -169,15 +172,18 @@ private struct OfferRow: View {
 #Preview("Populated") {
     OffersListView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Empty") {
     OffersListView()
         .environment(\.managedObjectContext, PersistenceController(inMemory: true).container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Dark mode") {
     OffersListView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
         .preferredColorScheme(.dark)
 }

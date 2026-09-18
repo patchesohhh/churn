@@ -38,6 +38,11 @@ struct ContentView: View {
                 .tabItem { Label("More", systemImage: "ellipsis.circle.fill") }
                 .tag(AppTab.settings)
         }
+        .onChange(of: tabSelection.selected) { oldTab, _ in
+            // Reset on the way OUT, not the way in -- so the tab's root is
+            // already showing by the time you tap back to it.
+            tabSelection.resetPath(for: oldTab)
+        }
     }
 }
 
