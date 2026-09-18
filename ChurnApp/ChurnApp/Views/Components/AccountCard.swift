@@ -21,6 +21,13 @@ struct AccountCard: View {
     /// Full mode: multi-line, larger type, for the primary Accounts list.
     var compact: Bool = false
 
+    /// Round 3: shows opening date, expected bonus date, and an
+    /// elapsed-time progress bar in the full layout — the Accounts tab
+    /// wants this richer per-row info, Home's compact strip doesn't have
+    /// room for it. No effect in `compact` mode or on non-churn accounts
+    /// (there's no bonus timeline to show progress toward).
+    var showProgress: Bool = false
+
     var body: some View {
         Group {
             if compact { compactBody } else { fullBody }
@@ -44,21 +51,70 @@ struct AccountCard: View {
 
                 Spacer()
 
-                StatusBadge(status: account.accountStatusValue)
-            }
-
-            HStack(alignment: .firstTextBaseline) {
-                MoneyText(amount: account.bonusAmountDecimal, size: .medium, color: moneyColor)
-
-                Spacer()
-
-                if let keyDate {
-                    Label(keyDate.formatted(date: .abbreviated, time: .omitted), systemImage: keyDateSymbol)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                if account.isChurnAccount {
+                    StatusBadge(status: account.accountStatusValue)
+                } else {
+                    GenericStatusBadge(text: "Home Account", color: .blue, systemImageName: "house.fill")
                 }
             }
+
+            if account.isChurnAccount {
+                HStack(alignment: .firstTextBaseline) {
+                    MoneyText(amount: account.bonusAmountDecimal, size: .medium, color: moneyColor)
+
+                    Spacer()
+
+                    if let keyDate {
+                        Label(keyDate.formatted(date: .abbreviated, time: .omitted), systemImage: keyDateSymbol)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                if showProgress {
+                    timelineDetail
+                }
+            } else if let person = account.person {
+                // Non-churn row: no bonus/timeline to show, so the second
+                // line just surfaces the owner instead of leaving dead
+                // space where the money/date row would otherwise sit.
+                Label(person.name, systemImage: "person.fill")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
+    }
+
+    /// Opening date, expected bonus date, and a simple elapsed-time bar
+    /// between them. Native `ProgressView` — no custom drawing. Only shown
+    /// when there's an `expectedBonusDate` to measure progress toward;
+    /// without one there's nothing to show a bar for.
+    @ViewBuilder
+    private var timelineDetail: some View {
+        if let expected = account.expectedBonusDate {
+            VStack(alignment: .leading, spacing: 4) {
+                ProgressView(value: elapsedFraction(from: account.openingDate, to: expected))
+                    .tint(account.accountStatusValue.color)
+
+                HStack {
+                    Text("Opened \(account.openingDate.formatted(date: .abbreviated, time: .omitted))")
+                    Spacer()
+                    Text("Expected \(expected.formatted(date: .abbreviated, time: .omitted))")
+                }
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    /// Fraction of the way from `start` to `end`, clamped to [0, 1]. `end`
+    /// at or before `start` reports 1.0 (already "due") rather than dividing
+    /// by zero/going negative.
+    private func elapsedFraction(from start: Date, to end: Date) -> Double {
+        let total = end.timeIntervalSince(start)
+        guard total > 0 else { return 1 }
+        let elapsed = Date().timeIntervalSince(start)
+        return min(max(elapsed / total, 0), 1)
     }
 
     // MARK: - Compact layout
@@ -127,6 +183,20 @@ struct AccountCard: View {
         VStack(spacing: 12) {
             ForEach(accounts, id: \.id) { account in
                 AccountCard(account: account)
+            }
+        }
+        .padding()
+    }
+}
+
+#Preview("Full with progress — churn + non-churn") {
+    let context = PersistenceController.preview.container.viewContext
+    let accounts = (try? context.fetch(Account.fetchRequest())) ?? []
+
+    return ScrollView {
+        VStack(spacing: 12) {
+            ForEach(accounts, id: \.id) { account in
+                AccountCard(account: account, showProgress: true)
             }
         }
         .padding()

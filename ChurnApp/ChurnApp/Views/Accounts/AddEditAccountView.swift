@@ -49,6 +49,12 @@ struct AddEditAccountView: View {
     @State private var eligibilityMonths: Int16 = 12
     @State private var accountNumberLast4 = ""
     @State private var isHomeAccount = false
+    /// Round 3: whether this account is running a signup bonus at all. Most
+    /// home accounts aren't, so toggling `isHomeAccount` on for a *new*
+    /// account (see the `onChange` below) flips this off by default; it
+    /// otherwise defaults to `true`, preserving round 1/2 behavior for plain
+    /// churn accounts.
+    @State private var isChurnAccount = true
     @State private var notes = ""
 
     @State private var didAttemptSave = false
@@ -72,7 +78,10 @@ struct AddEditAccountView: View {
 
                 bankSection
                 accountDetailsSection
-                bonusSection
+                churnToggleSection
+                if isChurnAccount {
+                    bonusSection
+                }
                 statusSection
                 notesSection
             }
@@ -145,10 +154,51 @@ struct AddEditAccountView: View {
             }
 
             Section {
+                // Not in the churn-fields-to-hide list (bonus amount/
+                // structure/requirements/dates/eligibility/offer link) — a
+                // plain non-churn account can still have a minimum balance
+                // to avoid a monthly fee, so this stays visible regardless
+                // of `isChurnAccount`.
+                Toggle("Has Minimum Balance Requirement", isOn: $hasMinimumBalance.animation())
+                if hasMinimumBalance {
+                    HStack {
+                        Text("$")
+                            .foregroundStyle(.secondary)
+                        TextField("Minimum Balance", text: $minimumBalanceText)
+                            #if os(iOS)
+                            .keyboardType(.decimalPad)
+                            #endif
+                    }
+                }
+            }
+
+            Section {
                 Toggle("This Is a Home Account", isOn: $isHomeAccount)
+                    .onChange(of: isHomeAccount) { _, newValue in
+                        // Round 3: most home accounts have no promo attached,
+                        // so flipping this on for a *new* account defaults
+                        // the churn toggle off. Only for new accounts — an
+                        // existing account's `isChurnAccount` shouldn't
+                        // silently flip just because the user is editing its
+                        // home-account flag.
+                        guard !isEditing else { return }
+                        isChurnAccount = !newValue
+                    }
             } footer: {
                 Text("Everything else routes through this account. Multiple home accounts are allowed.")
             }
+        }
+    }
+
+    /// Round 3: lets the user say "this account isn't running a bonus at
+    /// all" — most pre-existing home accounts (checking/savings from before
+    /// the user ever churned anything). Hides (not just disables) the
+    /// bonus-specific fields below when off, and eligibility-window when off.
+    private var churnToggleSection: some View {
+        Section {
+            Toggle("Earning a Bonus?", isOn: $isChurnAccount.animation())
+        } footer: {
+            Text("Turn this off for a plain account you're not running a signup bonus on.")
         }
     }
 
@@ -187,18 +237,6 @@ struct AddEditAccountView: View {
                     .frame(minHeight: 80)
             }
 
-            Toggle("Has Minimum Balance Requirement", isOn: $hasMinimumBalance.animation())
-            if hasMinimumBalance {
-                HStack {
-                    Text("$")
-                        .foregroundStyle(.secondary)
-                    TextField("Minimum Balance", text: $minimumBalanceText)
-                        #if os(iOS)
-                        .keyboardType(.decimalPad)
-                        #endif
-                }
-            }
-
             Toggle("Has Expected Bonus Date", isOn: $hasExpectedBonusDate.animation())
             if hasExpectedBonusDate {
                 DatePicker("Expected Bonus Date", selection: $expectedBonusDate, displayedComponents: .date)
@@ -214,11 +252,13 @@ struct AddEditAccountView: View {
                 }
             }
 
-            Picker("Eligibility Window", selection: $eligibilityMonths) {
-                Text("12 months").tag(Int16(12))
-                Text("24 months").tag(Int16(24))
+            if isChurnAccount {
+                Picker("Eligibility Window", selection: $eligibilityMonths) {
+                    Text("12 months").tag(Int16(12))
+                    Text("24 months").tag(Int16(24))
+                }
+                .pickerStyle(.segmented)
             }
-            .pickerStyle(.segmented)
         }
     }
 
@@ -246,7 +286,12 @@ struct AddEditAccountView: View {
     private var isValid: Bool {
         guard !people.isEmpty, selectedPersonID != nil else { return false }
         guard !bankName.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
-        guard let amount = bonusAmountDecimal, amount > 0 else { return false }
+        // Bonus fields are only required when this account is actually
+        // running a promotion — off, they're hidden and saved with sane
+        // defaults instead (see `save()`).
+        if isChurnAccount {
+            guard let amount = bonusAmountDecimal, amount > 0 else { return false }
+        }
         return true
     }
 
@@ -283,6 +328,7 @@ struct AddEditAccountView: View {
         eligibilityMonths = account.eligibilityMonths
         accountNumberLast4 = account.accountNumberLast4 ?? ""
         isHomeAccount = account.isHomeAccount
+        isChurnAccount = account.isChurnAccount
         notes = account.notes ?? ""
     }
 
@@ -290,7 +336,7 @@ struct AddEditAccountView: View {
 
     private func save() {
         didAttemptSave = true
-        guard isValid, let amount = bonusAmountDecimal, let selectedPersonID else { return }
+        guard isValid, let selectedPersonID else { return }
 
         let target = account ?? Account(context: viewContext)
         if account == nil {
@@ -304,13 +350,28 @@ struct AddEditAccountView: View {
         target.bank = selectedBank
         target.accountTypeValue = accountType
         target.openingDate = openingDate
-        target.bonusAmountDecimal = amount
-        target.bonusStructureValue = bonusStructure
-        target.bonusRequirements = bonusRequirements
+        target.isChurnAccount = isChurnAccount
+        if isChurnAccount {
+            // `isValid` guarantees a parseable, positive amount whenever
+            // `isChurnAccount` is true.
+            target.bonusAmountDecimal = bonusAmountDecimal ?? 0
+            target.bonusStructureValue = bonusStructure
+            target.bonusRequirements = bonusRequirements
+            target.expectedBonusDate = hasExpectedBonusDate ? expectedBonusDate : nil
+            target.eligibilityMonths = eligibilityMonths
+        } else {
+            // Round 3: churn fields are hidden, not validated, when this
+            // account isn't running a bonus — save harmless defaults instead
+            // of whatever stale/partial text happens to be sitting in the
+            // (hidden) form fields.
+            target.bonusAmountDecimal = 0
+            target.bonusStructureValue = .lumpSum
+            target.bonusRequirements = ""
+            target.expectedBonusDate = nil
+            target.eligibilityMonths = 12
+        }
         target.minimumBalance = hasMinimumBalance ? NSDecimalNumber(string: minimumBalanceText.isEmpty ? "0" : minimumBalanceText) : nil
-        target.expectedBonusDate = hasExpectedBonusDate ? expectedBonusDate : nil
         target.accountStatusValue = accountStatus
-        target.eligibilityMonths = eligibilityMonths
         target.accountNumberLast4 = accountNumberLast4.isEmpty ? nil : accountNumberLast4
         target.isHomeAccount = isHomeAccount
         target.notes = notes.isEmpty ? nil : notes
@@ -335,6 +396,15 @@ struct AddEditAccountView: View {
 #Preview("Edit existing account") {
     let context = PersistenceController.preview.container.viewContext
     let account = (try? context.fetch(Account.fetchRequest()))?.first
+
+    return AddEditAccountView(account: account)
+        .environment(\.managedObjectContext, context)
+}
+
+#Preview("Edit non-churn home account") {
+    let context = PersistenceController.preview.container.viewContext
+    let account = (try? context.fetch(Account.fetchRequest()))?
+        .first { $0.isHomeAccount && !$0.isChurnAccount }
 
     return AddEditAccountView(account: account)
         .environment(\.managedObjectContext, context)

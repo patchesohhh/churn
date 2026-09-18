@@ -44,19 +44,22 @@ struct AddEditPaycheckView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
-    /// Every non-archived account, for the per-split account picker. Not
-    /// scoped to `person` — a household's "home" accounts often belong to
-    /// the other earner, and nothing in the schema restricts a split to the
-    /// paycheck owner's own accounts.
+    /// Every non-archived, non-home account, for the per-split account
+    /// picker. Not scoped to `person` — a household's churn accounts often
+    /// belong to the other earner, and nothing in the schema restricts a
+    /// split to the paycheck owner's own accounts. Home accounts are
+    /// excluded here on purpose (round 3): they never receive an explicit
+    /// split line item, only the automatic `remainderAccount` below.
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Account.bankName, ascending: true)],
-        predicate: NSPredicate(format: "isArchived == NO")
+        predicate: NSPredicate(format: "isArchived == NO AND isHomeAccount == NO")
     )
     private var accounts: FetchedResults<Account>
 
-    /// Home accounts, to name where the unallocated remainder goes. Multiple
-    /// are allowed by the schema (see `Account.isHomeAccount`); this view
-    /// just names the first one found.
+    /// All home accounts, from any person — a couple may share/route to
+    /// either partner's home account, so this is deliberately not scoped to
+    /// `person`. Powers both the "Home Account" picker and the default-pick
+    /// logic below.
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Account.bankName, ascending: true)],
         predicate: NSPredicate(format: "isHomeAccount == YES")
@@ -67,6 +70,7 @@ struct AddEditPaycheckView: View {
 
     @State private var payDate = Date()
     @State private var totalAmountText = ""
+    @State private var remainderAccountID: NSManagedObjectID?
 
     /// Splits as editable drafts. Existing `DirectDeposit`s are wrapped
     /// on-appear; "Add Split" appends an empty, unsaved draft row.
@@ -85,7 +89,7 @@ struct AddEditPaycheckView: View {
             Form {
                 paycheckSection
                 splitsSection
-                remainderSection
+                homeAccountSection
             }
             .navigationTitle(isEditing ? "Edit Paycheck" : "New Paycheck")
             .toolbarTitleDisplayMode(.inline)
@@ -146,42 +150,67 @@ struct AddEditPaycheckView: View {
         }
     }
 
-    /// Live-updating remainder line — the whole reason this section exists
-    /// separately from the splits list. Deliberately never clamps a
-    /// negative value; over-allocation is a real state the user needs to
-    /// see and fix, not one the UI should hide.
-    private var remainderSection: some View {
+    /// The "Home Account" section: separate from the splits list since a
+    /// home account never gets an explicit split row, only the automatic
+    /// remainder. Also hosts the live-updating remainder line — deliberately
+    /// never clamps a negative value; over-allocation is a real state the
+    /// user needs to see and fix, not one the UI should hide.
+    private var homeAccountSection: some View {
         Section {
-            if unallocatedAmountDecimal < 0 {
-                Label {
-                    HStack(spacing: 4) {
-                        Text("Over-allocated by")
-                        MoneyText(amount: abs(unallocatedAmountDecimal), size: .small, color: .red)
-                    }
-                } icon: {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                }
-                .foregroundStyle(.red)
+            if homeAccounts.isEmpty {
+                Text("Add a home account in the Accounts tab to route your paycheck's remainder.")
+                    .foregroundStyle(.secondary)
             } else {
-                Label {
-                    HStack(spacing: 4) {
-                        Text("Unallocated:")
-                        MoneyText(amount: unallocatedAmountDecimal, size: .small)
-                        Text(homeAccountDescription)
-                            .foregroundStyle(.secondary)
+                Picker("Home Account", selection: $remainderAccountID) {
+                    Text("None").tag(NSManagedObjectID?.none)
+                    ForEach(homeAccounts, id: \.objectID) { account in
+                        Text(accountLabel(account)).tag(NSManagedObjectID?.some(account.objectID))
                     }
-                } icon: {
-                    Image(systemName: "arrow.turn.down.right")
+                }
+
+                if unallocatedAmountDecimal < 0 {
+                    Label {
+                        HStack(spacing: 4) {
+                            Text("Over-allocated by")
+                            MoneyText(amount: abs(unallocatedAmountDecimal), size: .small, color: .red)
+                        }
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                    }
+                    .foregroundStyle(.red)
+                } else {
+                    Label {
+                        HStack(spacing: 4) {
+                            Text("Remainder:")
+                            MoneyText(amount: unallocatedAmountDecimal, size: .small)
+                            Text(remainderAccountDescription)
+                                .foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        Image(systemName: "arrow.turn.down.right")
+                    }
                 }
             }
+        } header: {
+            Text("Home Account")
+        } footer: {
+            Text("Whatever's left over after your splits automatically routes here.")
         }
     }
 
-    private var homeAccountDescription: String {
-        if let home = homeAccounts.first {
-            "→ \(home.bankName)"
+    private var remainderAccountDescription: String {
+        if let id = remainderAccountID, let account = homeAccounts.first(where: { $0.objectID == id }) {
+            "→ \(account.bankName)"
         } else {
-            "(no home account set)"
+            "(not set)"
+        }
+    }
+
+    private func accountLabel(_ account: Account) -> String {
+        if let last4 = account.accountNumberLast4, !last4.isEmpty {
+            "\(account.bankName) ••••\(last4)"
+        } else {
+            account.bankName
         }
     }
 
@@ -220,11 +249,19 @@ struct AddEditPaycheckView: View {
             if person.paycheckAmountDecimal > 0 {
                 totalAmountText = NSDecimalNumber(decimal: person.paycheckAmountDecimal).stringValue
             }
+            // Default the remainder destination to the person's own home
+            // account, but only when they have exactly one — with zero or
+            // multiple, leave it unset and let the user pick explicitly.
+            let ownHomeAccounts = person.accountsArray.filter { $0.isHomeAccount }
+            if ownHomeAccounts.count == 1 {
+                remainderAccountID = ownHomeAccounts[0].objectID
+            }
             return
         }
 
         payDate = paycheck.payDate
         totalAmountText = NSDecimalNumber(decimal: paycheck.totalAmountDecimal).stringValue
+        remainderAccountID = paycheck.remainderAccount?.objectID
         splits = paycheck.directDepositsArray.map { deposit in
             SplitDraft(
                 existingDeposit: deposit,
@@ -258,6 +295,13 @@ struct AddEditPaycheckView: View {
         target.payDate = payDate
         target.totalAmountDecimal = amount
         target.updatedAt = Date()
+
+        if let remainderAccountID,
+           let remainderAccount = viewContext.object(with: remainderAccountID) as? Account {
+            target.remainderAccount = remainderAccount
+        } else {
+            target.remainderAccount = nil
+        }
 
         // Splits removed by the user only leave Core Data on Save — a
         // cancelled sheet must never mutate the shared context.

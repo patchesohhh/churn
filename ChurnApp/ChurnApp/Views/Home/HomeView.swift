@@ -52,10 +52,24 @@ struct HomeView: View {
 
     @Environment(\.managedObjectContext) private var viewContext
 
+    /// Shared tab-selection object injected from `MyApp`/`ContentView` (see
+    /// `AppTabSelection.swift`) — lets "View Full Schedule" below jump to the
+    /// Calendar tab without a cross-tab `NavigationPath`, which SwiftUI's
+    /// `TabView` doesn't support.
+    @Environment(AppTabSelection.self) private var tabSelection
+
     @State private var isPresentingAddAccount = false
     @State private var isPresentingPersonSetup = false
     @State private var addPaycheckTarget: Person?
     @State private var isChoosingPaycheckPerson = false
+
+    /// Tracks which item of `loopedCarouselItems` is currently snapped to
+    /// center. Starts at index 3 — the first item (YTD Earnings) of the
+    /// *middle* triplicated copy — so there's real content to scroll into on
+    /// both the left (into copy 0) and right (into copy 2) before any
+    /// looping reset needs to fire. See `earningsCarousel` for the looping
+    /// mechanism itself.
+    @State private var carouselPosition: Int? = 3
 
     // MARK: - Derived data
 
@@ -141,43 +155,122 @@ struct HomeView: View {
 
     // MARK: - 1. Earnings carousel
 
-    /// Swipeable page-style carousel of the three headline money metrics, per
-    /// the source doc's "Earnings Carousel (Top)" spec. `TabView(.page)`
-    /// reads closer to the original intent than a static HStack, and is
-    /// still fully native. Renders unconditionally — including at $0 with no
-    /// data at all — so the first thing a brand-new user sees is "here's
+    /// The three headline money metrics, per the source doc's "Earnings
+    /// Carousel (Top)" spec. Renders unconditionally — including at $0 with
+    /// no data at all — so the first thing a brand-new user sees is "here's
     /// where your money shows up", not a wall about bank accounts.
-    private var earningsCarousel: some View {
-        TabView {
-            StatCard(
+    private var carouselBaseItems: [CarouselItem] {
+        [
+            CarouselItem(
+                baseIndex: 0,
                 label: "YTD Earnings",
                 amount: CalculationService.ytdEarnings(accounts: Array(accounts)),
                 subtitle: "Money earned this year",
                 valueColor: .green
-            )
-            .padding(.horizontal)
-
-            StatCard(
+            ),
+            CarouselItem(
+                baseIndex: 1,
                 label: "Pending Bonuses",
                 amount: CalculationService.pendingBonusesTotal(accounts: Array(accounts)),
                 subtitle: "Still being worked on",
                 valueColor: .orange
-            )
-            .padding(.horizontal)
-
-            StatCard(
+            ),
+            CarouselItem(
+                baseIndex: 2,
                 label: "All-Time Earnings",
                 amount: CalculationService.allTimeEarnings(accounts: Array(accounts)),
-                subtitle: "Lifetime churning total"
-            )
-            .padding(.horizontal)
+                subtitle: "Lifetime churning total",
+                valueColor: nil
+            ),
+        ]
+    }
+
+    /// The 3 base items, triplicated back-to-back into a 9-item array.
+    /// SwiftUI's native `ScrollView` + `.scrollTargetBehavior(.viewAligned)`
+    /// carousel (the mechanism CLAUDE.md's round 3 spec calls for, in place
+    /// of round 1's `TabView(.page)`) has no built-in infinite-loop
+    /// primitive — a `ScrollView` always has a hard start and end. The
+    /// standard workaround is to give it extra real copies of the content on
+    /// both sides so there's always something to scroll into, then silently
+    /// snap the tracked position back to the equivalent spot in the middle
+    /// copy once the user drifts into an outer copy (`normalizeCarouselLoop`
+    /// below) — invisible to the user since it happens with animations
+    /// disabled, but it's what makes "scroll past the last card" appear to
+    /// wrap to the first.
+    private var loopedCarouselItems: [CarouselItem] {
+        (0..<3).flatMap { copy in
+            carouselBaseItems.map { base in
+                CarouselItem(
+                    id: copy * carouselBaseItems.count + base.baseIndex,
+                    baseIndex: base.baseIndex,
+                    label: base.label,
+                    amount: base.amount,
+                    subtitle: base.subtitle,
+                    valueColor: base.valueColor
+                )
+            }
         }
-        .tabViewStyle(.page(indexDisplayMode: .always))
-        .indexViewStyle(.page(backgroundDisplayMode: .always))
-        // Fixed height: `TabView` won't size itself to a `StatCard`'s
-        // intrinsic height the way a plain VStack would, and the page dots
-        // need a little breathing room below the card.
+    }
+
+    /// Native, center-aligned, looping, peeking carousel. `GeometryReader`
+    /// gives us the available width so the card can be sized narrower than
+    /// the screen (with the remainder split evenly as leading/trailing
+    /// scroll-view padding) — that's what makes the neighboring cards peek
+    /// in slightly at both edges while the centered card still reads as
+    /// "the" card. No page dots per the round 3 spec.
+    private var earningsCarousel: some View {
+        GeometryReader { geometry in
+            let cardWidth = geometry.size.width * 0.82
+            let sidePadding = (geometry.size.width - cardWidth) / 2
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 12) {
+                    ForEach(loopedCarouselItems) { item in
+                        StatCard(
+                            label: item.label,
+                            amount: item.amount,
+                            subtitle: item.subtitle,
+                            valueColor: item.valueColor
+                        )
+                        .frame(width: cardWidth)
+                    }
+                }
+                // Required for `.scrollTargetBehavior(.viewAligned)` below to
+                // know where each item's snap point is.
+                .scrollTargetLayout()
+            }
+            .safeAreaPadding(.horizontal, sidePadding)
+            .scrollTargetBehavior(.viewAligned)
+            .scrollPosition(id: $carouselPosition)
+            .onChange(of: carouselPosition) { _, newPosition in
+                normalizeCarouselLoop(newPosition)
+            }
+        }
+        // Fixed height: a `GeometryReader`/`ScrollView` combo won't size
+        // itself to a `StatCard`'s intrinsic height the way a plain VStack
+        // would.
         .frame(height: 150)
+    }
+
+    /// Once the tracked scroll position drifts into the first copy (indices
+    /// 0-2) or the last copy (indices 6-8) of `loopedCarouselItems`, jump it
+    /// back to the equivalent index in the middle copy (indices 3-5) — same
+    /// `baseIndex`, so the visible card doesn't change, only which physical
+    /// copy is "current". Animations are explicitly disabled for this jump
+    /// so it's invisible to the user; it just looks like the carousel kept
+    /// scrolling in the same direction forever.
+    private func normalizeCarouselLoop(_ position: Int?) {
+        guard let position else { return }
+        let itemCount = carouselBaseItems.count
+        guard position < itemCount || position >= itemCount * 2 else { return }
+
+        let normalizedIndex = position < itemCount ? position + itemCount : position - itemCount
+
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            carouselPosition = normalizedIndex
+        }
     }
 
     // MARK: - First-run call to action
@@ -268,9 +361,10 @@ struct HomeView: View {
                 title: "Next Paychecks",
                 actionTitle: nextPaychecks.isEmpty ? nil : "View full schedule"
             ) {
-                // TODO: navigate to the Calendar tab once it's wired up by
-                // the concurrently-built Calendar feature / tab-bar
-                // integration pass. Intentionally a no-op for now.
+                // Cross-tab navigation: a NavigationPath can't cross a
+                // TabView's tab boundaries, so this goes through the shared
+                // AppTabSelection instead (see the @Environment above).
+                tabSelection.selected = .calendar
             }
             .padding(.horizontal)
 
@@ -368,6 +462,24 @@ struct HomeView: View {
             isChoosingPaycheckPerson = true
         }
     }
+}
+
+// MARK: - Earnings carousel item
+
+/// One card's worth of data for `HomeView.earningsCarousel`. `id` is unique
+/// per *physical* position in the triplicated 9-item array (0...8);
+/// `baseIndex` (0...2) identifies which of the 3 real stat cards it's a copy
+/// of — that's what `normalizeCarouselLoop` uses to jump between equivalent
+/// positions across copies.
+private struct CarouselItem: Identifiable {
+    /// Defaulted since `carouselBaseItems` builds these without an `id` —
+    /// only `loopedCarouselItems` (below) assigns real, unique ids.
+    var id: Int = -1
+    let baseIndex: Int
+    let label: String
+    let amount: Decimal
+    let subtitle: String
+    let valueColor: Color?
 }
 
 // MARK: - Next paycheck row
@@ -488,13 +600,19 @@ private struct GenericStatCardDaysLabel: View {
 // MARK: - Previews
 
 #Preview("Populated") {
+    // Also verifies the carousel's initial centered/peeking state: the
+    // canvas is static so it can't show the loop/snap behavior in motion,
+    // but this confirms one full card sits centered with slivers of its
+    // neighbors visible at both edges on first render.
     HomeView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("First run (no Person)") {
     HomeView()
         .environment(\.managedObjectContext, PersistenceController(inMemory: true).container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Person exists, no accounts/paychecks") {
@@ -512,10 +630,12 @@ private struct GenericStatCardDaysLabel: View {
 
     return HomeView()
         .environment(\.managedObjectContext, context)
+        .environment(AppTabSelection())
 }
 
 #Preview("Dark mode") {
     HomeView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
         .preferredColorScheme(.dark)
 }

@@ -18,15 +18,6 @@ struct PaycheckDetailView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
-    /// To name where the remainder lands. See AddEditPaycheckView for the
-    /// same query/rationale — multiple home accounts are allowed, this just
-    /// names the first one found.
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Account.bankName, ascending: true)],
-        predicate: NSPredicate(format: "isHomeAccount == YES")
-    )
-    private var homeAccounts: FetchedResults<Account>
-
     @State private var isPresentingEdit = false
     @State private var isPresentingDeleteConfirm = false
 
@@ -170,11 +161,18 @@ struct PaycheckDetailView: View {
         }
     }
 
+    /// Reflects the real `Paycheck.remainderAccount` — nil means no
+    /// destination has been chosen, shown as a neutral state rather than
+    /// guessing at "the" home account.
     private var homeAccountDescription: String {
-        if let home = homeAccounts.first {
-            "→ \(home.bankName)"
+        if let account = paycheck.remainderAccount {
+            if let last4 = account.accountNumberLast4, !last4.isEmpty {
+                "→ \(account.bankName) ••••\(last4)"
+            } else {
+                "→ \(account.bankName)"
+            }
         } else {
-            "(no home account set)"
+            "(no destination set)"
         }
     }
 
@@ -309,7 +307,10 @@ struct PaycheckDetailView: View {
     .environment(\.managedObjectContext, context)
 }
 
-#Preview("No home account set") {
+#Preview("No destination set") {
+    // No `remainderAccount` assigned (and no home accounts exist in this
+    // fresh store at all) — exercises the neutral "(no destination set)"
+    // copy rather than guessing at an implicit home account.
     let controller = PersistenceController(inMemory: true)
     let context = controller.container.viewContext
 
@@ -329,6 +330,54 @@ struct PaycheckDetailView: View {
     paycheck.createdAt = Date()
     paycheck.updatedAt = Date()
     paycheck.person = person
+
+    return NavigationStack {
+        PaycheckDetailView(paycheck: paycheck)
+    }
+    .environment(\.managedObjectContext, context)
+}
+
+#Preview("Remainder account set") {
+    // `Paycheck.remainderAccount` assigned to a real home account —
+    // exercises the "→ Bank ••••1234" destination copy.
+    let controller = PersistenceController(inMemory: true)
+    let context = controller.container.viewContext
+
+    let person = Person(context: context)
+    person.id = UUID()
+    person.name = "Jordan"
+    person.payFrequency = PayFrequency.biweekly.rawValue
+    person.paycheckAmount = NSDecimalNumber(string: "2200.00")
+    person.maxConcurrentDirectDeposits = 3
+    person.createdAt = Date()
+    person.updatedAt = Date()
+
+    let homeAccount = Account(context: context)
+    homeAccount.id = UUID()
+    homeAccount.bankName = "Ally"
+    homeAccount.accountNumberLast4 = "4821"
+    homeAccount.accountType = AccountType.checking.rawValue
+    homeAccount.openingDate = Date()
+    homeAccount.bonusAmount = NSDecimalNumber(string: "0")
+    homeAccount.bonusStructure = BonusStructure.lumpSum.rawValue
+    homeAccount.bonusRequirements = ""
+    homeAccount.accountStatus = AccountStatus.open.rawValue
+    homeAccount.eligibilityMonths = 12
+    homeAccount.isArchived = false
+    homeAccount.isHomeAccount = true
+    homeAccount.isChurnAccount = false
+    homeAccount.createdAt = Date()
+    homeAccount.updatedAt = Date()
+    homeAccount.person = person
+
+    let paycheck = Paycheck(context: context)
+    paycheck.id = UUID()
+    paycheck.payDate = Date()
+    paycheck.totalAmount = NSDecimalNumber(string: "2200.00")
+    paycheck.createdAt = Date()
+    paycheck.updatedAt = Date()
+    paycheck.person = person
+    paycheck.remainderAccount = homeAccount
 
     return NavigationStack {
         PaycheckDetailView(paycheck: paycheck)

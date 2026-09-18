@@ -22,16 +22,30 @@ struct AccountDetailView: View {
     @State private var isPresentingEdit = false
     @State private var isPresentingDeleteConfirm = false
 
+    /// Round 3: a home account with no promotion attached (most of the
+    /// user's pre-existing checking/savings) doesn't need a bonus/timeline/
+    /// requirements screen — it just needs "where is my money going".
+    private var isReducedHomeAccount: Bool {
+        account.isHomeAccount && !account.isChurnAccount
+    }
+
     var body: some View {
         List {
-            headerSection
-            detailsSection
-            datesSection
-            if let notes = account.notes, !notes.isEmpty {
-                notesSection(notes)
+            if isReducedHomeAccount {
+                reducedHeaderSection
+                currentDirectDepositTotalSection
+            } else {
+                headerSection
+                detailsSection
+                datesSection
+                if let notes = account.notes, !notes.isEmpty {
+                    notesSection(notes)
+                }
             }
             remindersSection
-            directDepositsSection
+            if !isReducedHomeAccount {
+                directDepositsSection
+            }
         }
         .navigationTitle(account.bankName)
         .toolbarTitleDisplayMode(.inline)
@@ -74,6 +88,56 @@ struct AccountDetailView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This permanently removes the account and its reminders/deposits. This can't be undone.")
+        }
+    }
+
+    // MARK: - Reduced sections (non-churn home account)
+
+    /// Bank name, account type, last-4 — no `StatusBadge` (churn status is
+    /// meaningless here) and no bonus amount. A plain "Home Account" label
+    /// stands in for status so the screen doesn't look broken/empty.
+    private var reducedHeaderSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(account.bankName)
+                            .font(.title2.weight(.bold))
+                        Label(account.accountTypeValue.displayName, systemImage: account.accountTypeValue.systemImageName)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    GenericStatusBadge(text: "Home Account", color: .blue, systemImageName: "house.fill")
+                }
+
+                if let last4 = account.accountNumberLast4, !last4.isEmpty {
+                    LabeledContent("Account Number", value: "••••\(last4)")
+                }
+
+                if let person = account.person {
+                    Label(person.name, systemImage: "person.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+        .listRowSeparator(.hidden)
+    }
+
+    /// Sum of `DirectDeposit.amountDecimal` for this account's still-
+    /// scheduled deposits — "what's currently routed here", the one number
+    /// that actually matters for a plain home account.
+    private var currentDirectDepositTotal: Decimal {
+        account.directDepositsArray
+            .filter { $0.statusValue == .scheduled }
+            .reduce(Decimal.zero) { $0 + $1.amountDecimal }
+    }
+
+    private var currentDirectDepositTotalSection: some View {
+        Section("Current Direct Deposit Total") {
+            MoneyText(amount: currentDirectDepositTotal, size: .large)
         }
     }
 
@@ -290,6 +354,19 @@ private struct AccountRemindersScreen: View {
     let context = PersistenceController.preview.container.viewContext
     let account = (try? context.fetch(Account.fetchRequest()))?
         .first { $0.accountStatusValue == .open }
+
+    return NavigationStack {
+        if let account {
+            AccountDetailView(account: account)
+        }
+    }
+    .environment(\.managedObjectContext, context)
+}
+
+#Preview("Non-churn home account") {
+    let context = PersistenceController.preview.container.viewContext
+    let account = (try? context.fetch(Account.fetchRequest()))?
+        .first { $0.isHomeAccount && !$0.isChurnAccount }
 
     return NavigationStack {
         if let account {
