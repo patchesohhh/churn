@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788" systemVersion="25A354" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="NO" userDefinedModelVersionIdentifier="">
+    <entity name="Account" representedClassName="Account" syncable="YES">
+        <attribute name="accountNumberLast4" optional="YES" attributeType="String"/>
+        <attribute name="accountStatus" attributeType="String" defaultValueString="prospecting"/>
+        <attribute name="accountType" attributeType="String" defaultValueString="checking"/>
+        <attribute name="actualBonusDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="bankName" attributeType="String"/>
+        <attribute name="bonusAmount" attributeType="Decimal" minValueString="0" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="bonusRequirements" attributeType="String" defaultValueString=""/>
+        <attribute name="bonusStructure" attributeType="String" defaultValueString="lumpSum"/>
+        <attribute name="closedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="eligibilityMonths" attributeType="Integer 16" minValueString="0" maxValueString="24" defaultValueString="12" usesScalarValueType="YES"/>
+        <attribute name="expectedBonusDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isArchived" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="minimumBalance" optional="YES" attributeType="Decimal" minValueString="0" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="openingDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="directDeposits" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="DirectDeposit" inverseName="account" inverseEntity="DirectDeposit"/>
+        <relationship name="offer" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Offer" inverseName="accounts" inverseEntity="Offer"/>
+        <relationship name="person" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Person" inverseName="accounts" inverseEntity="Person"/>
+        <relationship name="reminders" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Reminder" inverseName="account" inverseEntity="Reminder"/>
+        <fetchIndex name="byAccountStatus">
+            <fetchIndexElement property="accountStatus" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byOpeningDate">
+            <fetchIndexElement property="openingDate" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byIsArchived">
+            <fetchIndexElement property="isArchived" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="DirectDeposit" representedClassName="DirectDeposit" syncable="YES">
+        <attribute name="amount" attributeType="Decimal" minValueString="0" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isFirstToBank" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="scheduledDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="sequenceNumberInSeries" attributeType="Integer 16" minValueString="0" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="status" attributeType="String" defaultValueString="scheduled"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="account" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="directDeposits" inverseEntity="Account"/>
+        <relationship name="person" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Person" inverseName="directDeposits" inverseEntity="Person"/>
+        <fetchIndex name="byScheduledDate">
+            <fetchIndexElement property="scheduledDate" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byStatus">
+            <fetchIndexElement property="status" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="Offer" representedClassName="Offer" syncable="YES">
+        <attribute name="bankName" attributeType="String"/>
+        <attribute name="bonusAmount" attributeType="Decimal" minValueString="0" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="directDepositRequired" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="eligibilityRestrictionMonths" optional="YES" attributeType="Integer 16" minValueString="0" maxValueString="24" defaultValueString="12" usesScalarValueType="NO"/>
+        <attribute name="expirationDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isActive" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="isFavorite" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="minimumDeposit" optional="YES" attributeType="Decimal" minValueString="0" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="monthsToMaintain" optional="YES" attributeType="Integer 16" minValueString="0" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="offerTitle" attributeType="String"/>
+        <attribute name="offerURL" optional="YES" attributeType="String"/>
+        <attribute name="requirements" attributeType="String" defaultValueString=""/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="accounts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="offer" inverseEntity="Account"/>
+        <fetchIndex name="byBankName">
+            <fetchIndexElement property="bankName" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byIsFavorite">
+            <fetchIndexElement property="isFavorite" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byExpirationDate">
+            <fetchIndexElement property="expirationDate" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="Person" representedClassName="Person" syncable="YES">
+        <attribute name="colorTag" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="defaultBankName" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="maxConcurrentDirectDeposits" attributeType="Integer 16" minValueString="0" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="nextPaycheckDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="paycheckAmount" attributeType="Decimal" minValueString="0" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="payFrequency" attributeType="String" defaultValueString="biweekly"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="accounts" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Account" inverseName="person" inverseEntity="Account"/>
+        <relationship name="directDeposits" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="DirectDeposit" inverseName="person" inverseEntity="DirectDeposit"/>
+        <fetchIndex name="byName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="Reminder" representedClassName="Reminder" syncable="YES">
+        <attribute name="completedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dueDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isArchived" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isCompleted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="notificationIdentifier" optional="YES" attributeType="String"/>
+        <attribute name="reminderType" attributeType="String" defaultValueString="custom"/>
+        <attribute name="title" attributeType="String"/>
+        <relationship name="account" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="reminders" inverseEntity="Account"/>
+        <fetchIndex name="byDueDate">
+            <fetchIndexElement property="dueDate" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byIsCompleted">
+            <fetchIndexElement property="isCompleted" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byReminderType">
+            <fetchIndexElement property="reminderType" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+</model>

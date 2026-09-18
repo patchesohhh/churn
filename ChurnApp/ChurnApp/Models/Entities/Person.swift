@@ -1,0 +1,111 @@
+//
+//  Person.swift
+//  ChurnApp
+//
+//  One household earner. This app is built for a dual-income household, so
+//  there are normally exactly two of these — but nothing enforces that.
+//
+//  NOTE ON CODEGEN: the `.xcdatamodeld` uses *manual* codegen and every
+//  `NSManagedObject` subclass is hand-written here. Xcode's automatic codegen
+//  emits `NSDecimalNumber?` for every Decimal attribute, which would leak
+//  optional NSDecimalNumber into every view and calculation. Writing the
+//  classes by hand lets money be a plain non-optional `Decimal` and lets the
+//  String-backed attributes expose typed enum accessors.
+//
+
+import CoreData
+import Foundation
+
+@objc(Person)
+public class Person: NSManagedObject {
+
+    @nonobjc public class func fetchRequest() -> NSFetchRequest<Person> {
+        NSFetchRequest<Person>(entityName: "Person")
+    }
+
+    // MARK: - Attributes
+
+    @NSManaged public var id: UUID
+    @NSManaged public var name: String
+    /// Raw value of `PayFrequency`. Prefer `payFrequencyValue`.
+    @NSManaged public var payFrequency: String
+    /// Money is always `NSDecimalNumber` in the store — Core Data cannot back
+    /// a `Decimal` struct with `@NSManaged`. Use `paycheckAmountDecimal` for
+    /// arithmetic; never convert money through `Double`.
+    @NSManaged public var paycheckAmount: NSDecimalNumber
+    @NSManaged public var nextPaycheckDate: Date?
+    /// How many direct deposits this person's employer will split a paycheck
+    /// across. The hard ceiling on how many accounts they can churn at once.
+    @NSManaged public var maxConcurrentDirectDeposits: Int16
+    /// The person's "home" bank — where leftover pay lands.
+    @NSManaged public var defaultBankName: String?
+    /// A system color name (e.g. "blue", "purple") used to tint this person's
+    /// rows so the two earners are distinguishable at a glance.
+    @NSManaged public var colorTag: String?
+    @NSManaged public var createdAt: Date
+    @NSManaged public var updatedAt: Date
+
+    // MARK: - Relationships
+
+    @NSManaged public var accounts: NSSet?
+    @NSManaged public var directDeposits: NSSet?
+}
+
+// MARK: - Typed accessors
+
+extension Person {
+
+    /// `paycheckAmount` as a Swift `Decimal`.
+    var paycheckAmountDecimal: Decimal {
+        get { paycheckAmount.decimalValue }
+        set { paycheckAmount = NSDecimalNumber(decimal: newValue) }
+    }
+
+    /// Typed view of `payFrequency`. Falls back to `.irregular` rather than
+    /// crashing if the store somehow holds an unknown string.
+    var payFrequencyValue: PayFrequency {
+        get { PayFrequency(rawValue: payFrequency) ?? .irregular }
+        set { payFrequency = newValue.rawValue }
+    }
+
+    /// Accounts as a stable, sorted array — `NSSet` has no order, and SwiftUI
+    /// `ForEach` needs one.
+    var accountsArray: [Account] {
+        (accounts as? Set<Account> ?? []).sorted { $0.openingDate > $1.openingDate }
+    }
+
+    var directDepositsArray: [DirectDeposit] {
+        (directDeposits as? Set<DirectDeposit> ?? []).sorted { $0.scheduledDate < $1.scheduledDate }
+    }
+}
+
+// MARK: - Generated relationship accessors
+
+extension Person {
+
+    @objc(addAccountsObject:)
+    @NSManaged public func addToAccounts(_ value: Account)
+
+    @objc(removeAccountsObject:)
+    @NSManaged public func removeFromAccounts(_ value: Account)
+
+    @objc(addAccounts:)
+    @NSManaged public func addToAccounts(_ values: NSSet)
+
+    @objc(removeAccounts:)
+    @NSManaged public func removeFromAccounts(_ values: NSSet)
+
+    @objc(addDirectDepositsObject:)
+    @NSManaged public func addToDirectDeposits(_ value: DirectDeposit)
+
+    @objc(removeDirectDepositsObject:)
+    @NSManaged public func removeFromDirectDeposits(_ value: DirectDeposit)
+
+    @objc(addDirectDeposits:)
+    @NSManaged public func addToDirectDeposits(_ values: NSSet)
+
+    @objc(removeDirectDeposits:)
+    @NSManaged public func removeFromDirectDeposits(_ values: NSSet)
+}
+
+extension Person: Identifiable {}

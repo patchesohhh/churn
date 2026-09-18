@@ -11,8 +11,10 @@ Xcode project: `ChurnApp/ChurnApp.xcodeproj`, target `ChurnApp`.
 Uses Xcode's modern **synchronized file groups**
 (`PBXFileSystemSynchronizedRootGroup`) — any `.swift` file placed under
 `ChurnApp/ChurnApp/` is automatically included in the app target. No
-`project.pbxproj` edits needed to add files. (A `ChurnAppTests` target does
-require a `project.pbxproj` edit to create — see Testing below.)
+`project.pbxproj` edits needed to add files. A `ChurnAppTests` unit test
+target already exists (added to `project.pbxproj` during foundation setup,
+with a shared `ChurnApp` scheme) — test files go in `ChurnApp/ChurnAppTests/`
+and are auto-included the same way; no further pbxproj edits needed.
 
 Source docs live in `docs/project notes/` (originally `.rtf`, converted to
 `.txt` — read the `.txt` versions). They describe an 8-week plan; this build
@@ -74,6 +76,46 @@ schema in `potential database structure.txt` is Phase 2+ and should not be
 implemented now — if you're looking at that file for the `Offer` entity,
 you're reading the wrong doc; use the simpler Core Data schema instead.
 
+### Foundation is built — read this before writing any view or service code
+
+`Models/ChurnDataModel.xcdatamodeld`, `Models/Entities/{Person,Account,
+DirectDeposit,Reminder,Offer}.swift`, `Models/PersistenceController.swift`,
+and `Models/Enums.swift` already exist. Use them as-is; don't redefine
+entities or enums. A few deliberate deviations from the spec above — these
+are the real API surface, not the aspirational one:
+
+- **Soft-delete flag is `isArchived`, not `isDeleted`** on `Account` and
+  `Reminder` — `NSManagedObject` already reserves `isDeleted`. Filter with
+  `isArchived == NO`.
+- **Money is `NSDecimalNumber`, not `Decimal`**, at the Core Data attribute
+  level (Core Data doesn't support scalar `Decimal`). Don't touch the raw
+  `NSDecimalNumber` properties directly — every entity has a typed
+  `...Decimal: Decimal` computed accessor (e.g. `account.bonusAmountDecimal`,
+  `person.paycheckAmountDecimal`) for get/set. Use those. Still no `Double`
+  anywhere.
+- **Enum-backed String attributes have typed accessors** — don't read/write
+  the raw String columns directly. Use `person.payFrequencyValue`,
+  `account.accountTypeValue` / `.bonusStructureValue` / `.accountStatusValue`,
+  `deposit.statusValue`, `reminder.reminderTypeValue`.
+- **To-many relationships have sorted array accessors** for `ForEach`:
+  `person.accountsArray` / `.directDepositsArray`, `account.remindersArray`
+  / `.directDepositsArray`, `offer.accountsArray`.
+- Handy computed flags: `account.hasBonusPosted`, `reminder.isOverdue`,
+  `offer.isExpired`.
+- `Reminder.account` delete rule is **nullify** (not cascade as originally
+  spec'd) — deleting a single reminder must not delete its account. The
+  account→reminders cascade (delete account → its reminders go) is what's
+  actually implemented and is the correct direction.
+- `Offer.eligibilityRestrictionMonths` / `.monthsToMaintain` are `NSNumber?`
+  — read via `?.int16Value` (0 is a meaningful distinct value from unset).
+- **Codegen is manual**, not Xcode automatic — if you ever add an attribute
+  to the `.xcdatamodeld`, you must add the matching `@NSManaged` property in
+  `Models/Entities/` yourself.
+- `PersistenceController.preview` is seeded via `SampleData.populate(in:)`
+  (2 people, 4 accounts — one per status, 4 direct deposits, 3 reminders,
+  2 offers) — reuse this in every `#Preview` and test rather than building
+  ad hoc fixtures.
+
 ## Testing — required, this is how progress gets verified without a human at the wheel
 
 - Every non-trivial piece of logic (Core Data validation, `CalculationService`
@@ -81,7 +123,7 @@ you're reading the wrong doc; use the simpler Core Data schema instead.
   headlessly via:
   ```
   xcodebuild -project ChurnApp/ChurnApp.xcodeproj -scheme ChurnApp \
-    -destination 'platform=iOS Simulator,name=iPhone 16' test
+    -destination 'platform=iOS Simulator,name=iPhone 17 (27)' test
   ```
 - Before marking any task done, run the build (`xcodebuild ... build`) and
   the test suite and confirm both are green. Don't hand off broken code.
