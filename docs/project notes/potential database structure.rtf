@@ -1,0 +1,2577 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2870
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 .AppleSystemUIFontMonospaced-Regular;\f1\fnil\fcharset0 AppleColorEmoji;}
+{\colortbl;\red255\green255\blue255;\red236\green235\blue231;\red11\green11\blue11;\red118\green116\blue110;
+}
+{\*\expandedcolortbl;;\cssrgb\c94118\c93725\c92549;\cssrgb\c4314\c4314\c4314;\cssrgb\c53725\c52941\c50588;
+}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs24 \cf2 \cb3 \expnd0\expndtw0\kerning0
+# Backend Data Requirements Analysis\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 Yes, absolutely. While your MVP can work entirely on-device, having some centralized data would significantly improve the user experience and reduce friction. Here\'92s what makes sense:\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ## Critical Backend Databases\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### 1. Bank Institution Database\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Purpose:** Autocomplete and standardize bank names\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Why it\'92s needed:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Users will type \'93Chase\'94 vs \'93JP Morgan Chase\'94 vs \'93Chase Bank\'94 inconsistently\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Logo/branding makes the app feel more polished\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Proper institution identification helps with eligibility tracking\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Enables future features (filter by bank, see all Chase accounts, etc.)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Data Structure:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 Bank Institution\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  id (UUID)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  official_name (string) - "JPMorgan Chase Bank, N.A."\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  common_name (string) - "Chase"\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  short_name (string) - "Chase"\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  aliases (array) - ["Chase Bank", "JP Morgan Chase", "Chase"]\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  logo_url (string) - Link to bank logo\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  institution_type (enum) - "national_bank", "credit_union", "online_bank"\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  website (string)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  is_active (boolean) - Still operating\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9492 \u9472 \u9472  routing_numbers (array) - For potential future validation\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Initial Dataset Size:** ~200 institutions\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Top 50 national banks (Chase, BofA, Wells Fargo, Citi, etc.)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Top 50 regional banks\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Top 50 credit unions\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Top 50 online banks (Ally, Marcus, etc.)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Data Sources:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - FDIC BankFind Suite (free, public API)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Manual curation for logos and common names\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Community submissions over time\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Implementation:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **MVP:** Bundle a JSON file with top 100 banks in the app\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **Phase 2:** Firebase/Supabase database with periodic updates\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **Phase 3:** User contributions/corrections\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### 2. Bank Offer Database\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Purpose:** Pre-fill offer details when user selects a bank\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Why it\'92s needed:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Huge time-saver for users (don\'92t have to type everything)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Reduces data entry errors\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Ensures consistency in requirements tracking\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Enables intelligent eligibility checking\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Creates network effects (users benefit from each other\'92s data)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Data Structure:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 Bank Offer\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  id (UUID)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  bank_id (foreign key to Bank Institution)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  offer_title (string) - "Chase Total Checking $300 Bonus"\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  bonus_amount (decimal) - 300.00\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  offer_type (enum) - "checking", "savings", "money_market"\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  requirements (JSON) - Structured requirements\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9474    \u9500 \u9472 \u9472  direct_deposit_required (boolean)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9474    \u9500 \u9472 \u9472  direct_deposit_amount (decimal) - 500.00\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9474    \u9500 \u9472 \u9472  direct_deposit_count (integer) - 1\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9474    \u9500 \u9472 \u9472  direct_deposit_timeframe_days (integer) - 90\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9474    \u9500 \u9472 \u9472  minimum_opening_deposit (decimal) - 25.00\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9474    \u9500 \u9472 \u9472  maintain_balance (decimal) - 0.00\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9474    \u9500 \u9472 \u9472  maintain_balance_days (integer) - 0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9474    \u9500 \u9472 \u9472  debit_transactions_required (integer) - 0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9474    \u9500 \u9472 \u9472  bill_pay_required (boolean) - false\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9474    \u9492 \u9472 \u9472  other_requirements (string) - Free text\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  eligibility_restriction (integer) - 12, 24, or 0 months\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  eligibility_type (enum) - "no_bonus", "no_account", "no_relationship"\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  new_customer_only (boolean)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  bonus_payout_timeframe_days (integer) - 90\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  monthly_fee (decimal) - 12.00\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  fee_waiver_requirements (string)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  offer_code (string) - "CHASE300" if applicable\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  offer_url (string) - Direct link to bank's page\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  terms_url (string) - Link to full T&Cs\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  start_date (date) - When offer became available\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  end_date (date) - When offer expires\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  states_excluded (array) - ["OH", "WV"] etc.\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  is_active (boolean)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  verification_status (enum) - "verified", "unverified", "expired"\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  data_quality_score (integer) - 1-5, based on completeness\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  created_at (timestamp)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  updated_at (timestamp)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  created_by (enum) - "admin", "scraper", "user_submission"\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9492 \u9472 \u9472  submission_count (integer) - How many users reported this offer\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Data Sources:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Primary Sources (Manual/Scraped):**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Doctor of Credit bank bonus page (they maintain active offers)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Bank websites directly\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - r/churning wiki and megathreads\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Bankrate, NerdWallet, [Money.com](http://Money.com) bank bonus sections\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Scraping Strategy:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Weekly scrape of Doctor of Credit (with permission/respect for robots.txt)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Monthly scrape of major bank websites\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - RSS/API monitoring for new posts\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Community Sourcing:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Users can submit new offers (needs moderation queue)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Users can report expired offers\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Users can confirm offer details\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Upvote/downvote system for accuracy\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Initial Dataset Size:** 50-100 active offers\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Start with major banks only\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Expand based on user demand\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Quality > quantity initially\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### 3. Offer Terms & Conditions Archive\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Purpose:** Store full T&Cs text for reference and ML training\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Why it\'92s needed:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Legal protection (user can reference exact terms)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Historical record (banks change offers, user needs proof)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Training data for future ML parsing feature\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Helps resolve disputes with banks\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Data Structure:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 Offer Terms\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  id (UUID)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  offer_id (foreign key to Bank Offer)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  full_text (text) - Complete T&Cs\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  pdf_url (string) - Link to archived PDF\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  capture_date (timestamp)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  version (integer) - If terms change\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9492 \u9472 \u9472  source_url (string) - Where it was captured\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Storage:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - S3 bucket for PDFs (cheap, $0.023/GB/month)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Database for text (searchable)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - [Archive.org](http://Archive.org) as backup\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Implementation:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **MVP:** Not needed, users can store locally if they want\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **Phase 2:** Store when offer is scraped\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **Phase 3:** User uploads their specific T&Cs version\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### 4. User-Contributed Data\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Purpose:** Crowdsource offer verification and updates\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Why it\'92s needed:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Offers change frequently (weekly/monthly)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Impossible for solo developer to track everything\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Community validation improves data quality\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Creates engagement and retention\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Data Structure:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 User Submission\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  id (UUID)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  user_id (anonymous hash) - Privacy-preserving\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  submission_type (enum) - "new_offer", "update_offer", "expire_offer"\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  bank_id (foreign key)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  offer_data (JSON) - Submitted offer details\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  supporting_url (string)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  supporting_screenshot (string) - Uploaded image URL\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  status (enum) - "pending", "approved", "rejected"\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  created_at (timestamp)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9492 \u9472 \u9472  moderated_by (admin_id)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Moderation:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Admin review queue (you initially)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Trusted user program (Phase 2: users with 5+ verified submissions get fast-track)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Automatic approval for minor updates (expiration dates, etc.)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ## Additional Useful Databases\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### 5. Direct Deposit Coding Database\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Purpose:** Help users understand which transactions count as \'93direct deposit\'94\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Why it\'92s helpful:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Banks have different definitions of direct deposit\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Some accept ACH from external accounts, some don\'92t\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Knowing in advance saves trial and error\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Data Structure:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 Direct Deposit Data Point\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  id (UUID)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  bank_id (foreign key)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  deposit_source (string) - "Payroll (ADP)", "Venmo", "PayPal", etc.\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  deposit_type (string) - "ACH", "Wire", "Check"\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  works_as_dd (enum) - "confirmed_yes", "confirmed_no", "unknown"\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  date_tested (date)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  user_count (integer) - How many users confirmed\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9492 \u9472 \u9472  notes (string)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Data Sources:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Doctor of Credit\'92s direct deposit guides\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - r/churning data points\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - User submissions\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Implementation:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **Phase 2 feature** - Nice to have but not critical\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Display on account detail: \'93Direct Deposit Tips for [Bank]\'94\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### 6. State Availability Database\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Purpose:** Track which offers are available in which states\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Why it\'92s helpful:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Many offers exclude certain states (e.g., OH, WV common exclusions)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Saves users time looking at ineligible offers\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Can filter offers by user\'92s state\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Data Structure:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 (Part of Bank Offer model)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  states_excluded (array) - ["OH", "WV", "RI"]\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9500 \u9472 \u9472  states_included (array) - null (means all except excluded)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \uc0\u9492 \u9472 \u9472  territories_included (boolean) - PR, GU, etc.\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Implementation:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Add to offer scraping\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - User sets home state in settings\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Filter offers accordingly\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ## Backend Architecture Recommendations\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### MVP (Months 0-3): Static JSON Bundle\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **What:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Bundle a `banks.json` file (top 100 banks) in the app\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Bundle an `offers.json` file (50 current offers) in the app\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Update with each app release (monthly)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Pros:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Zero backend costs\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Works offline perfectly\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Fast (no API calls)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Simple to implement\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Cons:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Manual updates required\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Users must update app to get new offers\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - No real-time data\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - No user contributions\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **When to graduate:** 200+ active users, or frequent complaints about stale data\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### Phase 2 (Months 3-9): Simple Backend\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Platform:** Supabase (Recommended) or Firebase\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Why Supabase:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - PostgreSQL (robust, familiar)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Auto-generated REST API\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Real-time subscriptions (optional)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Row-level security\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Generous free tier:\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3   - 500 MB database\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3   - 1 GB file storage\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3   - 2 GB bandwidth\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3   - 50,000 monthly active users\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - $25/month Pro tier if you outgrow free\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Why NOT Firebase:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - More expensive at scale ($25-100/month)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - NoSQL can be limiting for relational data\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Less SQL-friendly\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Architecture:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 iOS App\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3     \uc0\u9500 \u9472 \u9472  Core Data (local storage, primary)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3     \uc0\u9500 \u9472 \u9472  CloudKit (user's personal data sync)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3     \uc0\u9492 \u9472 \u9472  Supabase (read-only: banks, offers)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3         \uc0\u9500 \u9472 \u9472  GET /banks (cached locally, update weekly)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3         \uc0\u9500 \u9472 \u9472  GET /offers (cached locally, update daily)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3         \uc0\u9492 \u9472 \u9472  POST /submissions (user contributions)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Costs at Scale:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - 0-500 users: Free tier sufficient\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - 500-5,000 users: $25/month (Pro tier)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - 5,000+ users: $100-200/month (Team tier with more bandwidth)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Data Update Strategy:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - App checks for updates on launch (if >24 hours since last check)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Background fetch updates offer database daily\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - User can manually refresh\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Push notification for major updates (new high-value offer)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### Phase 3 (Month 9+): Advanced Backend\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **When you add:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - ML/AI parsing of T&Cs\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Offer recommendation engine\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - User reputation system\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Analytics dashboard\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Additional Services:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **Scraping service:** Python scripts on AWS Lambda or Render (cron jobs)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3   - Cost: $0-10/month (minimal compute)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **Image storage:** S3 for screenshots/PDFs\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3   - Cost: $1-5/month for thousands of images\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **ML API:** OpenAI API for T&C parsing\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3   - Cost: Variable, estimate $20-50/month\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ## Data Scraping Strategy\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### Target Sources (In Order of Value)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **1. Doctor of Credit (Primary)**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - URL: <https://www.doctorofcredit.com/best-bank-account-bonuses/>\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Update frequency: Multiple times per week\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Data quality: Excellent, manually curated\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Scraping: Respectful (check once per day, respect robots.txt, consider supporting via Patreon)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **2. Bank Websites Directly (Secondary)**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - URLs: [chase.com/offers](http://chase.com/offers), [bankofamerica.com/promos](http://bankofamerica.com/promos), etc.\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Update frequency: Weekly check of top 20 banks\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Data quality: Authoritative but harder to parse\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Scraping: More complex, changes frequently\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **3. Reddit r/churning (Tertiary)**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - URL: [reddit.com/r/churning](http://reddit.com/r/churning)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Update frequency: Real-time\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Data quality: Variable, but fast\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Scraping: Use Reddit API (free tier)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### Scraping Implementation\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Tool:** Python with BeautifulSoup/Scrapy\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Schedule:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Doctor of Credit: Daily at 6am ET\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Bank websites: Weekly on Sundays\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Reddit: On-demand (not automated, manual check)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Data Pipeline:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 Scraper (Python)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3     \uc0\u8595 \cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 Raw HTML/JSON\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3     \uc0\u8595 \cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 Parser (extract fields)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3     \uc0\u8595 \cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 Validator (check completeness)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3     \uc0\u8595 \cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 Supabase Database\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3     \uc0\u8595 \cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 iOS App (daily sync)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ```\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Hosting:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - AWS Lambda (free tier: 1M requests/month)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Render (Cron Jobs, free tier available)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - GitHub Actions (free for public repos, hacky but works)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Cost:** $0-10/month\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ## Data Quality & Maintenance\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### Quality Metrics\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Offer Completeness Score (1-5):**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - 1: Bank name + bonus amount only\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - 2: + Basic requirements (DD amount, timeframe)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - 3: + Eligibility restrictions, fees\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - 4: + Expiration date, offer code, full requirements\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - 5: + Verified by multiple users, T&Cs archived\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Freshness:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Green: Updated within 7 days\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Yellow: Updated within 30 days\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Red: Updated >30 days ago\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Expired: Past end_date or marked inactive\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### Moderation Workflow\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **New Offer Submission:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. User submits offer details\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. Goes to moderation queue (email notification to you)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. You verify against bank website\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. Approve/reject/request changes\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. If approved, goes live immediately\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. User gets notification of approval\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Update Offer:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. User reports change (price, expiration, etc.)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. Quick review (2 minutes)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. Update live data\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. Thank user in-app\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Report Expired Offer:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. User marks offer as expired\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. Auto-flag if 3+ users report\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. Verify on bank website\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. Mark inactive\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. Archive\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Time Commitment:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Initial database: 20-30 hours (one-time)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Weekly maintenance: 2-3 hours\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Daily moderation: 15-30 minutes (once you have users submitting)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ## Privacy & Legal Considerations\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### User Data Privacy\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **What you collect for backend:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Anonymous user ID (hashed, can\'92t identify individual)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Offer submissions (no personal account data)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - General usage analytics (which offers are popular)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **What you DON\'92T collect:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Personal account numbers\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Actual bonus amounts earned\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Account opening dates\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Any PII\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Storage:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - User\'92s account data: CloudKit (Apple\'92s servers, encrypted)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Offer database: Supabase (you control, but no personal data)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Clear separation of concerns\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### Terms of Service Scraping\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Legal considerations:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Scraping publicly available data: Generally okay (hiQ Labs v. LinkedIn precedent)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Respect robots.txt: Good practice, reduces risk\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Don\'92t overload servers: Rate limit, be respectful\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Add value: You\'92re organizing/structuring data, not just republishing\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Attribution: Credit Doctor of Credit when appropriate\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Doctor of Credit Specific:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Consider reaching out to them\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - They may allow API access or partnership\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Or at minimum, support them via Patreon ($5/month = good karma)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ## Monetization via Data\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### Future Revenue Streams (Post-MVP)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Affiliate Links:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Link to bank offers with affiliate codes\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Earn $5-50 per signup\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Could offset or replace subscription revenue\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Example: \'93Open this Chase account\'94 \uc0\u8594  your affiliate link \u8594  $20-30 commission\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Bank Partnerships:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Banks pay to be featured/promoted\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - \'93Verified offers\'94 badge for paid banks\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Could be substantial revenue ($500-2000/month per bank)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Data Licensing:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Anonymized aggregate data about churning trends\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Financial companies would pay for insights\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Must be extremely careful about privacy\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Note:** All of these are Phase 3+. Don\'92t complicate MVP with this.\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ## Implementation Roadmap\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### MVP (Week 1-8): No Backend\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Bundle banks.json with top 100 banks\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Bundle offers.json with 50 current offers\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Manual updates with app releases\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### Month 3-6: Add Basic Backend\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Set up Supabase (free tier)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Migrate JSON files to Supabase\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Add daily sync to app\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Build basic scraper for Doctor of Credit\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **Cost: $0/month**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### Month 6-9: Add User Contributions\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - User submission form\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Moderation queue\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Email notifications\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Trusted user program\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **Cost: $0-25/month** (if you exceed free tier)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### Month 9-12: Advanced Features\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - ML parsing of T&Cs (OpenAI API)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Offer recommendation algorithm\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Affiliate link integration\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **Cost: $25-75/month**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### Year 2+: Scale\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Multiple scrapers\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Analytics dashboard\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Bank partnerships\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Dedicated backend infrastructure\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **Cost: $100-300/month** (but revenue should be $2-10k/month by then)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 -----\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ## Summary & Recommendations\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### What You Should Build:\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Immediately (MVP):**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. 
+\f1 \uc0\u9989 
+\f0  Bundle `banks.json` with ~100 top institutions\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. 
+\f1 \uc0\u9989 
+\f0  Bundle `offers.json` with ~50 current offers (manually curated)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 1. 
+\f1 \uc0\u9989 
+\f0  Update monthly via app releases\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Month 3 (After initial traction):**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 4. 
+\f1 \uc0\u9989 
+\f0  Supabase database (free tier)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 5. 
+\f1 \uc0\u9989 
+\f0  Basic scraper for Doctor of Credit\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 6. 
+\f1 \uc0\u9989 
+\f0  Daily sync in app\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Month 6 (If 100+ paying users):**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 7. 
+\f1 \uc0\u9989 
+\f0  User submission system\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 8. 
+\f1 \uc0\u9989 
+\f0  Moderation workflow\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 9. 
+\f1 \uc0\u9989 
+\f0  Community verification\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Month 9+ (If 300+ paying users):**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 10. 
+\f1 \uc0\u9989 
+\f0  Advanced features (ML, recommendations)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 11. 
+\f1 \uc0\u9989 
+\f0  Affiliate integration\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 12. 
+\f1 \uc0\u9989 
+\f0  Bank partnerships\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 ### Initial Time Investment:\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Database creation (one-time):**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Banks database: 8-10 hours (scrape FDIC, add logos, organize)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Offers database: 15-20 hours (research top 50 offers, structure data)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - **Total: 25-30 hours** over 2-3 weeks\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 **Ongoing maintenance:**\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Week 1-12 (MVP): 30 min/week (update offers.json)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 - Month 3+: 2 hours/week (monitor scraper, moderate submissions)\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \'a0\cf2 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 This approach keeps your MVP lean while setting you up for powerful features once you\'92ve validated the product. The backend becomes a competitive moat once you have comprehensive, up-to-date offer data that users can\'92t easily get elsewhere.\uc0\u8203 \u8203 \u8203 \u8203 \u8203 \u8203 \u8203 \u8203 \u8203 \u8203 \u8203 \u8203 \u8203 \u8203 \u8203 \u8203 \cf2 \cb1 \
+}

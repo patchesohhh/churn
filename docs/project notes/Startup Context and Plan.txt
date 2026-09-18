@@ -1,0 +1,2107 @@
+# Bank Account Churning Tracker App - Comprehensive Project Overview
+
+ 
+
+## Executive Summary
+
+ 
+
+This document outlines the complete plan for developing an iOS app that helps users track bank account bonuses (“churning”). The app solves a real problem experienced by the founder: managing the complex requirements, timelines, and eligibility rules of multiple bank account bonus offers using spreadsheets is cumbersome and error-prone.
+
+ 
+
+**Core Value Proposition:** Users can earn $4,000-7,000+ annually through bank account churning, but tracking requirements across multiple accounts is complex. This app prevents missed bonuses, forgotten account closures, and eligibility mistakes that could cost hundreds of dollars.
+
+ 
+
+## Problem Statement
+
+ 
+
+Bank account churning involves:
+
+ 
+
+- Opening checking/savings accounts to earn signup bonuses ($200-500+ per account)
+
+- Meeting specific requirements (direct deposits, minimum balances, transaction counts)
+
+- Tracking eligibility windows (many banks require 12-24 months between bonuses)
+
+- Managing multiple simultaneous accounts
+
+- Remembering to close accounts to avoid fees
+
+- Calculating tax obligations on bonus income
+
+ 
+
+Current solution (spreadsheets) is functional but requires manual updates, offers no reminders, and provides no intelligence about eligibility or timing optimization.
+
+ 
+
+## Market Validation
+
+ 
+
+**Proof of Concept:**
+
+ 
+
+- Founder and spouse earned $7,000 in 2024, projected $4,000 in 2025
+
+- Active communities exist: r/churning (500k+ members), Doctor of Credit forums
+
+- No dedicated app currently exists for this specific use case
+
+- Target users are financially sophisticated, comfortable with technology
+
+ 
+
+**Market Size:**
+
+ 
+
+- Primary market: 10,000-50,000 serious practitioners in US
+
+- Secondary market: Personal finance enthusiasts who would start churning with better tools
+
+- Addressable market likely supports $50-250k ARR at maturity
+
+ 
+
+**Target Demographic:**
+
+ 
+
+- Age: 25-45
+
+- Income: $75k-200k household
+
+- Characteristics: Financially savvy, optimization-minded, comfortable with iOS apps
+
+- Psychographic: Similar to credit card churners but less risk-tolerant
+
+ 
+
+## Product Vision
+
+ 
+
+### MVP Feature Set (Weeks 1-8)
+
+ 
+
+**Core Features (Must-Have):**
+
+ 
+
+1. **Account Tracking**
+
+ 
+
+- Bank name
+
+- Account opening date
+
+- Bonus amount (lump sum or recurring structure)
+
+- Bonus requirements (direct deposit amounts, transaction counts, etc.)
+
+- Minimum balance to avoid fees
+
+- Expected bonus payment date
+
+- Actual bonus payment date (when received)
+
+- Account status (open/closed)
+
+- Account owner (for couples/households)
+
+- Account close date
+
+- Eligibility restrictions (12-month, 24-month rules)
+
+ 
+
+1. **Dashboard**
+
+ 
+
+- Total earned year-to-date
+
+- Total earned all-time
+
+- Estimated tax liability (simple calculation: earnings × 25%)
+
+- List of currently active accounts
+
+- Count of accounts opened this year
+
+ 
+
+1. **Reminders System**
+
+ 
+
+- Reminder to check if bonus has posted
+
+- Reminder to close account (avoid maintenance fees)
+
+- Reminder to update direct deposit settings
+
+- Local push notifications
+
+- Ability to mark reminders complete or snooze
+
+ 
+
+1. **Manual Offer Entry**
+
+ 
+
+- Structured form for entering new bank account offers
+
+- Key fields: bank name, bonus amount, requirements, eligibility rules
+
+- Store offer expiration dates
+
+ 
+
+**Rationale for MVP Scope:**
+
+ 
+
+- Focuses on core job-to-be-done: “Don’t mess up these accounts”
+
+- Avoids complex features that delay launch
+
+- Provides immediate value to early adopters
+
+- Can be built in 6-8 weeks part-time
+
+- Validates willingness to pay before investing in advanced features
+
+ 
+
+### Post-MVP Features (Phase 2+)
+
+ 
+
+Explicitly excluded from MVP to enable faster launch:
+
+ 
+
+1. **Gantt Chart Visualizer** - Nice-to-have but not essential for tracking
+
+1. **Offer Database** - Can be added once user base exists to crowdsource data
+
+1. **Direct Deposit Optimizer** - Complex calculation, limited immediate value
+
+1. **TOS Storage** - Users can keep PDFs elsewhere for MVP
+
+1. **ML/AI Parsing** - Expensive to build, can use structured input for MVP
+
+1. **Offer Recommendations** - Requires larger dataset and algorithm development
+
+1. **Plaid Integration** - Expensive (~$0.30-2/user/month), not needed for target demographic
+
+ 
+
+## Business Model
+
+ 
+
+### Pricing Strategy
+
+ 
+
+**Primary Options:**
+
+ 
+
+- Monthly: $4.99/month
+
+- Annual: $49.99/year (17% discount, ~$4.16/month)
+
+- Lifetime: $99.99 one-time (appeals to this demographic, limits recurring revenue)
+
+ 
+
+**Rationale:**
+
+ 
+
+- Price point is 1-2% of annual earnings for typical user ($4k-7k/year)
+
+- One missed $300 bonus or one $12/month fee = app pays for itself 5-10x
+
+- Low enough for impulse purchase, high enough to be taken seriously
+
+- Annual pricing improves retention and cash flow
+
+- Lifetime option serves as pressure relief valve for subscription-averse users
+
+ 
+
+**Free Trial:**
+
+ 
+
+- 7 days (Apple App Store standard)
+
+- Long enough to add 2-3 accounts and see value
+
+- Short enough to drive conversion decision
+
+ 
+
+### Revenue Projections
+
+ 
+
+**Conservative Year 1 Goals:**
+
+ 
+
+- Month 3: 50 paying users → $175 MRR (after Apple’s 30% cut)
+
+- Month 6: 200 paying users → $700 MRR
+
+- Month 12: 500 paying users → $1,750 MRR
+
+ 
+
+**Assumptions:**
+
+ 
+
+- 30% monthly/70% annual split
+
+- 70% retention after Year 1
+
+- Organic growth only (no paid acquisition)
+
+- 15% Apple cut after Year 1 for subscribers
+
+ 
+
+**Upside Scenario:**
+
+If product resonates strongly and captures 2-3% of addressable market within 24 months, potential for $5-10k MRR, representing a successful lifestyle business for indie developer.
+
+ 
+
+### Operating Costs
+
+ 
+
+**Year 1 Recurring Costs:**
+
+ 
+
+- Apple Developer Program: $99/year (required)
+
+- Domain registration: $15/year
+
+- Landing page hosting: $0 (Vercel/Netlify free tier)
+
+- CloudKit: $0 (Apple free tier easily accommodates app’s needs)
+
+- Email collection: $0 (ConvertKit/Loops free tier up to 1,000 subscribers)
+
+- **Total: ~$115-150/year**
+
+ 
+
+**Cost Rationale:**
+
+ 
+
+- Leveraging Apple’s infrastructure (CloudKit) eliminates server costs
+
+- No database hosting needed
+
+- No API costs (no Plaid, no external services)
+
+- Scales automatically with Apple’s infrastructure
+
+- Profitable from first ~30 paying users
+
+ 
+
+**Future Costs (Post-MVP):**
+
+ 
+
+- Offer scraping/database: $0-25/month (Supabase/Firebase free tier)
+
+- Analytics: $0 (TelemetryDeck free tier)
+
+- Customer support: Time only (no paid tools needed initially)
+
+ 
+
+## Technical Architecture
+
+ 
+
+### Platform Decision: iOS-First, Native
+
+ 
+
+**Platform:** iOS only (Native SwiftUI)
+
+ 
+
+**Rationale:**
+
+ 
+
+- Target demographic skews higher-income (more likely iOS users)
+
+- Founder is iOS developer (faster development, better quality)
+
+- Native experience expected for paid app
+
+- SwiftUI enables faster development than UIKit
+
+- Can add Android later if demand justifies
+
+ 
+
+**Minimum iOS Version:** iOS 16
+
+ 
+
+**Rationale:**
+
+ 
+
+- Balances modern API access with user coverage
+
+- iOS 16 released September 2022 (2+ years old at launch)
+
+- Covers ~95% of active iOS devices
+
+- Enables use of SwiftUI 4.0 features
+
+- iOS 15 support would require significant workarounds
+
+ 
+
+### Backend Architecture: Serverless (CloudKit + Core Data)
+
+ 
+
+**Decision:** No custom backend. Use Apple’s CloudKit + Core Data.
+
+ 
+
+**Stack:**
+
+ 
+
+- **Core Data** - Local persistence, primary data store
+
+- **CloudKit** - iCloud sync across user’s devices
+
+- **StoreKit 2** - In-app purchase management
+
+- **UserNotifications** - Local reminders
+
+- **SwiftUI** - UI framework
+
+ 
+
+**Rationale for Serverless Approach:**
+
+ 
+
+1. **Cost Efficiency**
+
+ 
+
+- CloudKit is free (generous limits: 1GB per user, 10GB/day transfer)
+
+- No server hosting costs
+
+- No database costs
+
+- No scaling concerns
+
+ 
+
+1. **Development Speed**
+
+ 
+
+- No backend API to build
+
+- No authentication system to implement (uses iCloud)
+
+- No deployment pipeline for server
+
+- Founder can focus 100% on iOS app
+
+ 
+
+1. **Privacy & Security**
+
+ 
+
+- Data never leaves Apple’s ecosystem
+
+- No third-party servers to secure
+
+- Apple handles all encryption
+
+- Appealing to privacy-conscious users
+
+ 
+
+1. **Reliability**
+
+ 
+
+- Apple’s infrastructure (99.9%+ uptime)
+
+- Automatic scaling
+
+- Built-in backup via iCloud
+
+ 
+
+1. **Sync Complexity**
+
+ 
+
+- CloudKit handles conflict resolution
+
+- Sync “just works” across iPhone, iPad
+
+- No need to build custom sync logic
+
+ 
+
+**Limitations Accepted:**
+
+ 
+
+1. **Requires iCloud** - Users must have iCloud enabled
+
+ 
+
+- Acceptable: Target demographic uses iCloud
+
+- Can work offline, syncs when online
+
+ 
+
+1. **No Web Version** - CloudKit is Apple-only
+
+ 
+
+- Acceptable: iOS-first strategy
+
+- Can build web version later with separate backend if needed
+
+ 
+
+1. **Limited Cross-Platform** - Can’t easily share data with Android
+
+ 
+
+- Acceptable: Not targeting Android for MVP
+
+- Could export CSV or build API later
+
+ 
+
+1. **Shared Database Complexity** - Public CloudKit database less intuitive
+
+ 
+
+- Acceptable: MVP doesn’t need shared offer database
+
+- Can add in Phase 2 or use alternative (Supabase)
+
+ 
+
+### Data Model Strategy
+
+ 
+
+**Approach:** Rich Core Data entities with CloudKit sync
+
+ 
+
+**Key Principles:**
+
+ 
+
+1. **Offline-first** - App must work without internet
+
+1. **Sync-enabled** - All entities sync via CloudKit
+
+1. **Deletion-safe** - Soft deletes for audit trail
+
+1. **Relationship-rich** - Proper entity relationships for data integrity
+
+1. **Extensible** - Easy to add fields without migrations breaking
+
+ 
+
+## Go-to-Market Strategy
+
+ 
+
+### Launch Strategy (8-Week Timeline)
+
+ 
+
+**Pre-Launch Phase (Weeks 1-6: Development)**
+
+ 
+
+- Build MVP feature set
+
+- Founder uses app for own churning (dogfooding)
+
+- Create TestFlight beta
+
+- Recruit 10-20 beta testers from personal network
+
+- Iterate based on feedback
+
+ 
+
+**Launch Preparation (Week 7)**
+
+ 
+
+- App Store submission
+
+- Create landing page with email capture
+
+- Write launch post for r/churning
+
+- Prepare Doctor of Credit forum post
+
+- Create app screenshots and demo video
+
+- Write App Store description
+
+- Develop privacy policy
+
+ 
+
+**Launch Week (Week 8-9)**
+
+ 
+
+- App goes live on App Store
+
+- Post to r/churning: “I made $7k bank churning in 2024. Here’s the app I built to stop using spreadsheets.”
+
+- Post to Doctor of Credit forums (tools/resources section)
+
+- Submit to Product Hunt (secondary audience)
+
+- Email beta testers asking for reviews
+
+- Share in personal finance communities
+
+ 
+
+**Post-Launch (Weeks 10+)**
+
+ 
+
+- Monitor feedback and reviews
+
+- Quick iteration on bugs
+
+- Weekly blog posts: “How we made $X this month churning”
+
+- SEO content: “bank account bonus tracker,” “churning app”
+
+- Organic community engagement
+
+ 
+
+### Marketing Strategy
+
+ 
+
+**Content Marketing:**
+
+ 
+
+1. **Blog on landing page**
+
+ 
+
+- “How We Made $7,000 Bank Churning in 2024”
+
+- “The 5 Best Bank Account Bonuses Right Now”
+
+- “How to Track Bank Account Churning (Without Spreadsheets)”
+
+- Monthly income reports with screenshots
+
+ 
+
+1. **Video Content**
+
+ 
+
+- App walkthrough
+
+- Tutorial: “How to track your first account”
+
+- “Bank churning for beginners”
+
+ 
+
+1. **SEO Strategy**
+
+ 
+
+- Target: “bank account bonus tracker”
+
+- Target: “churning spreadsheet alternative”
+
+- Target: “bank account bonus calendar”
+
+- Long-tail: “[Bank Name] bonus requirements tracker”
+
+ 
+
+**Community Engagement:**
+
+ 
+
+- Active, helpful presence in r/churning (not spammy)
+
+- Doctor of Credit forum contributions
+
+- Respond to “how do you track bonuses” questions with value, mention app secondarily
+
+- Build in public: Share development progress, user milestones
+
+ 
+
+**Positioning:**
+
+ 
+
+- “The app that pays for itself with one prevented mistake”
+
+- “From spreadsheet chaos to organized churning”
+
+- “Built by churners, for churners”
+
+ 
+
+### Distribution Channels
+
+ 
+
+**Primary:**
+
+ 
+
+- r/churning subreddit (500k members)
+
+- Doctor of Credit website/forums (high-intent traffic)
+
+- Word of mouth from early adopters
+
+ 
+
+**Secondary:**
+
+ 
+
+- Product Hunt (credibility, press)
+
+- r/personalfinance (broader audience)
+
+- Hacker News (if building-in-public angle resonates)
+
+- Personal finance Twitter/X
+
+ 
+
+**Owned:**
+
+ 
+
+- Landing page with SEO content
+
+- Email list (for updates, launches)
+
+ 
+
+### Success Metrics
+
+ 
+
+**Leading Indicators (First 30 Days):**
+
+ 
+
+- App Store impressions
+
+- Landing page visitors
+
+- Email signups
+
+- App downloads
+
+- Trial starts
+
+ 
+
+**Lagging Indicators (First 90 Days):**
+
+ 
+
+- Trial-to-paid conversion rate (target: 30%+)
+
+- Monthly recurring revenue
+
+- Churn rate (target: <10%/month)
+
+- App Store rating (target: 4.5+)
+
+- Active users adding accounts
+
+ 
+
+**Validation Milestones:**
+
+ 
+
+- 20 paying users in first month = real interest
+
+- 50 paying users in 3 months = product-market fit starting
+
+- 200 paying users in 6 months = clear demand
+
+- 500 paying users in 12 months = sustainable business
+
+ 
+
+## Development Plan
+
+ 
+
+### 8-Week Development Timeline
+
+ 
+
+**Week 1: Foundation & Data Model**
+
+ 
+
+- Set up Xcode project (iOS 16+, SwiftUI)
+
+- Configure Core Data stack
+
+- Define Core Data entities (Account, Reminder, Offer)
+
+- Set up CloudKit container
+
+- Configure CloudKit sync
+
+- Basic app structure and navigation
+
+ 
+
+**Week 2: Account Management (Part 1)**
+
+ 
+
+- Account list view
+
+- Add account form (basic fields)
+
+- Account detail view
+
+- Edit account functionality
+
+- Delete account (soft delete)
+
+ 
+
+**Week 3: Account Management (Part 2)**
+
+ 
+
+- Complete account form (all fields)
+
+- Input validation
+
+- Owner selection (for couples)
+
+- Eligibility period tracking (12/24 month rules)
+
+- Account status management
+
+ 
+
+**Week 4: Dashboard & Calculations**
+
+ 
+
+- Dashboard view with key metrics
+
+- Calculate total earned YTD
+
+- Calculate total earned all-time
+
+- Calculate tax estimate (earnings × 0.25)
+
+- Active accounts list
+
+- Account count by year
+
+ 
+
+**Week 5: Reminders System**
+
+ 
+
+- Reminder generation logic
+
+- Reminder list view
+
+- Local notification scheduling
+
+- Mark reminder complete
+
+- Snooze reminder functionality
+
+- Notification permission handling
+
+ 
+
+**Week 6: Polish & Beta**
+
+ 
+
+- App icon design
+
+- Onboarding flow (3-4 screens)
+
+- Empty states
+
+- Error handling
+
+- Accessibility review (VoiceOver, Dynamic Type)
+
+- TestFlight setup and beta distribution
+
+- Gather beta feedback
+
+ 
+
+**Week 7: App Store Preparation**
+
+ 
+
+- Address beta feedback
+
+- Create App Store screenshots (6.7”, 6.5”, 5.5”)
+
+- Write App Store description
+
+- Record app preview video
+
+- Create privacy policy
+
+- Implement StoreKit 2 (subscription)
+
+- Set up App Store Connect
+
+- Submit for review
+
+ 
+
+**Week 8: Launch**
+
+ 
+
+- App Store approval
+
+- Execute launch plan (Reddit, forums, Product Hunt)
+
+- Monitor reviews and feedback
+
+- Quick bug fixes if needed
+
+ 
+
+**Week 9+: Iteration**
+
+ 
+
+- Address user feedback
+
+- Monitor analytics
+
+- Plan Phase 2 features based on demand
+
+ 
+
+### Technical Implementation Details
+
+ 
+
+**Architecture Pattern:** MVVM (Model-View-ViewModel)
+
+ 
+
+**Rationale:**
+
+ 
+
+- Clean separation of concerns
+
+- Testable business logic
+
+- Natural fit for SwiftUI
+
+- Scalable as app grows
+
+ 
+
+**Key Technical Decisions:**
+
+ 
+
+1. **SwiftUI over UIKit**
+
+ 
+
+- Faster development
+
+- Less boilerplate
+
+- Modern, declarative UI
+
+- Better for indie developer time constraints
+
+ 
+
+1. **Core Data over Realm/SQLite**
+
+ 
+
+- Native Apple solution
+
+- Seamless CloudKit integration
+
+- Well-documented
+
+- No third-party dependencies
+
+ 
+
+1. **CloudKit Private Database**
+
+ 
+
+- User’s personal data
+
+- Automatic encryption
+
+- Sync across devices
+
+- No server management
+
+ 
+
+1. **StoreKit 2 over StoreKit 1**
+
+ 
+
+- Modern async/await API
+
+- Cleaner code
+
+- Better error handling
+
+- Future-proof
+
+ 
+
+1. **No Third-Party Dependencies (Initially)**
+
+ 
+
+- Faster compile times
+
+- Fewer breaking changes
+
+- Simpler maintenance
+
+- Can add later if needed
+
+ 
+
+### Quality Assurance Strategy
+
+ 
+
+**Testing Approach:**
+
+ 
+
+1. Unit tests for calculation logic (tax estimates, date calculations)
+
+1. UI tests for critical paths (add account, add reminder)
+
+1. Manual testing on physical devices (iPhone 12/13/14/15)
+
+1. Beta testing with 10-20 real users
+
+1. TestFlight feedback monitoring
+
+ 
+
+**Device Coverage:**
+
+ 
+
+- iPhone SE (smallest screen)
+
+- iPhone 14 Pro (Dynamic Island)
+
+- iPhone 15 Pro Max (largest screen)
+
+- iPad (bonus, not required for MVP)
+
+ 
+
+**iOS Version Testing:**
+
+ 
+
+- Primary: iOS 17, iOS 18
+
+- Secondary: iOS 16 (backward compatibility check)
+
+ 
+
+## Risk Analysis & Mitigation
+
+ 
+
+### Technical Risks
+
+ 
+
+**Risk: CloudKit sync conflicts**
+
+ 
+
+- Mitigation: Use CloudKit’s automatic conflict resolution, test multi-device scenarios
+
+- Impact: Medium | Likelihood: Medium
+
+ 
+
+**Risk: App Store rejection**
+
+ 
+
+- Mitigation: Follow guidelines carefully, clear privacy policy, use standard StoreKit
+
+- Impact: High (delays launch) | Likelihood: Low
+
+ 
+
+**Risk: Core Data migration issues**
+
+ 
+
+- Mitigation: Thorough schema planning, test migrations, lightweight migrations only
+
+- Impact: Medium | Likelihood: Low
+
+ 
+
+### Business Risks
+
+ 
+
+**Risk: Market too small**
+
+ 
+
+- Mitigation: Validate early with beta users, pivot to adjacent markets (credit card churning)
+
+- Impact: High | Likelihood: Medium
+
+ 
+
+**Risk: Banks crack down on churning**
+
+ 
+
+- Mitigation: Diversify value prop (general bank account management), monitor industry trends
+
+- Impact: High | Likelihood: Low
+
+ 
+
+**Risk: Competitor launches first**
+
+ 
+
+- Mitigation: Focus on execution speed, build community, differentiate on quality
+
+- Impact: Medium | Likelihood: Low
+
+ 
+
+**Risk: Low conversion rate**
+
+ 
+
+- Mitigation: Strong free trial experience, clear value prop, pricing experimentation
+
+- Impact: High | Likelihood: Medium
+
+ 
+
+**Risk: Apple policy changes**
+
+ 
+
+- Mitigation: Comply with all guidelines, avoid gray areas, maintain good standing
+
+- Impact: High | Likelihood: Very Low
+
+ 
+
+### Market Risks
+
+ 
+
+**Risk: Acquisition cost too high**
+
+ 
+
+- Mitigation: Focus on organic/community channels, leverage personal story
+
+- Impact: Medium | Likelihood: Low (organic strategy)
+
+ 
+
+**Risk: High churn rate**
+
+ 
+
+- Mitigation: Continuous value delivery, engagement features, annual pricing incentive
+
+- Impact: Medium | Likelihood: Medium
+
+ 
+
+**Risk: Negative community reaction**
+
+ 
+
+- Mitigation: Transparent communication, active participation, deliver value first
+
+- Impact: High | Likelihood: Low
+
+ 
+
+## Success Criteria
+
+ 
+
+### MVP Success Definition
+
+ 
+
+**Minimum Viable Success (6 months):**
+
+ 
+
+- 100+ paying users
+
+- $350+ MRR (after Apple cut)
+
+- 4.0+ App Store rating
+
+- <15% monthly churn
+
+- Break-even on time investment (qualitative)
+
+ 
+
+**Strong Success (12 months):**
+
+ 
+
+- 500+ paying users
+
+- $1,750+ MRR
+
+- 4.5+ App Store rating
+
+- <10% monthly churn
+
+- Clear path to $5k+ MRR
+
+ 
+
+**Exceptional Success (12 months):**
+
+ 
+
+- 1,000+ paying users
+
+- $3,500+ MRR
+
+- Featured by Apple or major press
+
+- Expanding to Phase 2 features
+
+- Considering full-time transition
+
+ 
+
+### Go/No-Go Decision Points
+
+ 
+
+**3 Months Post-Launch:**
+
+ 
+
+- If <20 paying users: Reevaluate product-market fit, consider pivot or sunset
+
+- If 20-50 paying users: Continue, iterate on feedback
+
+- If >50 paying users: Double down, plan Phase 2
+
+ 
+
+**6 Months Post-Launch:**
+
+ 
+
+- If <50 paying users: Likely sunset or pivot
+
+- If 50-150 paying users: Maintain, slow iteration
+
+- If >150 paying users: Invest in Phase 2, consider expansion
+
+ 
+
+## Future Vision (Post-MVP)
+
+ 
+
+### Phase 2 Features (Month 6-12)
+
+ 
+
+**Based on User Demand:**
+
+ 
+
+1. Gantt chart timeline visualizer
+
+1. Offer database (crowdsourced or scraped)
+
+1. Direct deposit allocation optimizer
+
+1. Export to CSV
+
+1. Shared accounts (family plans)
+
+1. iPad optimization
+
+1. Apple Watch complications (quick stats)
+
+ 
+
+### Phase 3 Expansion (Year 2+)
+
+ 
+
+**If Business Scales:**
+
+ 
+
+1. Credit card churning integration
+
+1. ML-powered offer term parsing
+
+1. Plaid integration (if ROI justifies cost)
+
+1. Android version
+
+1. API for third-party integrations
+
+1. Community features (anonymized offer sharing)
+
+1. Referral program
+
+ 
+
+### Adjacent Opportunities
+
+ 
+
+**Potential Pivots/Expansions:**
+
+ 
+
+- General bank account management app
+
+- Credit card bonus tracking
+
+- Investment account bonus tracking
+
+- Broader “financial optimization” suite
+
+- B2B: Partner with banks for promotional tracking
+
+ 
+
+## Appendix: Founder Context
+
+ 
+
+**Background:**
+
+ 
+
+- Indie iOS developer (part-time, outside full-time work)
+
+- Personal experience: $7k earned in 2024, $4k projected 2025
+
+- Currently uses spreadsheet for tracking
+
+- Target user = self (strong product intuition)
+
+ 
+
+**Development Capacity:**
+
+ 
+
+- Part-time: evenings/weekends
+
+- 10-15 hours/week available
+
+- 6-8 weeks to MVP realistic
+
+- Can sustain long-term iteration
+
+ 
+
+**Constraints:**
+
+ 
+
+- No external funding (bootstrapped)
+
+- Must remain profitable from early stage
+
+- Limited marketing budget
+
+- Solo developer (all roles: dev, design, marketing, support)
+
+ 
+
+**Advantages:**
+
+ 
+
+- Deep domain knowledge
+
+- Target demographic
+
+- Technical skills (iOS development)
+
+- Low financial risk (minimal costs)
+
+- Long-term vision (lifestyle business, not exit)
+
+ 
+
+-----
+
+ 
+
+# Technical Specifications: Data Models
+
+ 
+
+## Core Data Schema
+
+ 
+
+Below are the detailed Core Data entity definitions with all attributes, relationships, and configurations.
+
+ 
+
+### Entity: Account
+
+ 
+
+Represents a bank account opened for churning purposes.
+
+ 
+
+**Attributes:**
+
+ 
+
+|Attribute Name   |Type   |Optional|Default       |Notes                           |
+
+|-----------------|-------|--------|--------------|--------------------------------|
+
+|id               |UUID   |No      |Auto-generated|Primary identifier              |
+
+|bankName         |String |No      |-             |Name of financial institution   |
+
+|accountType      |String |No      |“checking”    |“checking” or “savings”         |
+
+|openingDate      |Date   |No      |-             |Date account was opened         |
+
+|bonusAmount      |Decimal|No      |-             |Total bonus amount in USD       |
+
+|bonusStructure   |String |No      |“lump_sum”    |“lump_sum” or “recurring”       |
+
+|bonusRequirements|String |Yes     |-             |Text description of requirements|
+
+|minimumBalance   |Decimal|Yes     |-             |Balance needed to avoid fees    |
+
+|expectedBonusDate|Date   |Yes     |-             |When bonus should post          |
+
+|actualBonusDate  |Date   |Yes     |-             |When bonus actually posted      |
+
+|accountStatus    |String |No      |“open”        |“open” or “closed”              |
+
+|accountOwner     |String |No      |-             |Name of account holder          |
+
+|closedDate       |Date   |Yes     |-             |Date account was closed         |
+
+|eligibilityMonths|Int16  |No      |12            |12 or 24 month restriction      |
+
+|accountNumber    |String |Yes     |-             |Last 4 digits (optional)        |
+
+|notes            |String |Yes     |-             |Additional notes                |
+
+|createdAt        |Date   |No      |Now           |Record creation timestamp       |
+
+|updatedAt        |Date   |No      |Now           |Last modification timestamp     |
+
+|isDeleted        |Bool   |No      |false         |Soft delete flag                |
+
+ 
+
+**Relationships:**
+
+ 
+
+- `reminders`: To-many relationship to Reminder entity (cascade delete)
+
+- `offer`: To-one relationship to Offer entity (nullify on delete)
+
+ 
+
+**Indexes:**
+
+ 
+
+- accountStatus
+
+- openingDate
+
+- accountOwner
+
+- isDeleted
+
+ 
+
+**Validation Rules:**
+
+ 
+
+- bonusAmount must be > 0
+
+- eligibilityMonths must be 12 or 24
+
+- If accountStatus = “closed”, closedDate must not be nil
+
+- openingDate cannot be in the future
+
+ 
+
+-----
+
+ 
+
+### Entity: Reminder
+
+ 
+
+Represents a notification/reminder related to an account.
+
+ 
+
+**Attributes:**
+
+ 
+
+|Attribute Name        |Type  |Optional|Default       |Notes                      |
+
+|----------------------|------|--------|--------------|---------------------------|
+
+|id                    |UUID  |No      |Auto-generated|Primary identifier         |
+
+|title                 |String|No      |-             |Reminder title             |
+
+|reminderType          |String|No      |-             |See types below            |
+
+|dueDate               |Date  |No      |-             |When reminder should fire  |
+
+|isCompleted           |Bool  |No      |false         |Whether user completed task|
+
+|completedDate         |Date  |Yes     |-             |When marked complete       |
+
+|notes                 |String|Yes     |-             |Additional context         |
+
+|notificationIdentifier|String|Yes     |-             |UNNotificationRequest ID   |
+
+|createdAt             |Date  |No      |Now           |Record creation timestamp  |
+
+|isDeleted             |Bool  |No      |false         |Soft delete flag           |
+
+ 
+
+**Reminder Types (String values):**
+
+ 
+
+- “check_bonus” - Check if bonus has posted
+
+- “close_account” - Close account to avoid fees
+
+- “update_direct_deposit” - Update payroll settings
+
+- “meet_requirement” - Complete a specific requirement
+
+- “custom” - User-defined reminder
+
+ 
+
+**Relationships:**
+
+ 
+
+- `account`: To-one relationship to Account entity (required, cascade delete)
+
+ 
+
+**Indexes:**
+
+ 
+
+- dueDate
+
+- isCompleted
+
+- reminderType
+
+- isDeleted
+
+ 
+
+**Validation Rules:**
+
+ 
+
+- dueDate cannot be in the past when created
+
+- If isCompleted = true, completedDate must not be nil
+
+ 
+
+-----
+
+ 
+
+### Entity: Offer
+
+ 
+
+Represents a bank account bonus offer (current or potential future use).
+
+ 
+
+**Attributes:**
+
+ 
+
+|Attribute Name        |Type   |Optional|Default       |Notes                        |
+
+|----------------------|-------|--------|--------------|-----------------------------|
+
+|id                    |UUID   |No      |Auto-generated|Primary identifier           |
+
+|bankName              |String |No      |-             |Name of financial institution|
+
+|offerTitle            |String |No      |-             |Marketing name of offer      |
+
+|bonusAmount           |Decimal|No      |-             |Bonus amount in USD          |
+
+|requirements          |String |Yes     |-             |Detailed requirements text   |
+
+|expirationDate        |Date   |Yes     |-             |When offer expires           |
+
+|eligibilityRestriction|Int16  |No      |12            |Months since last bonus      |
+
+|minimumDeposit        |Decimal|Yes     |-             |Required initial deposit     |
+
+|directDepositRequired |Bool   |No      |false         |Whether DD is required       |
+
+|directDepositAmount   |Decimal|Yes     |-             |Minimum DD amount            |
+
+|directDepositCount    |Int16  |Yes     |-             |Number of DDs needed         |
+
+|monthsToMaintain      |Int16  |Yes     |-             |Months to keep account open  |
+
+|offerURL              |String |Yes     |-             |Link to bank’s offer page    |
+
+|termsAndConditions    |String |Yes     |-             |Full T&Cs text               |
+
+|isActive              |Bool   |No      |true          |Whether offer is still valid |
+
+|isFavorite            |Bool   |No      |false         |User marked as favorite      |
+
+|notes                 |String |Yes     |-             |User’s notes about offer     |
+
+|createdAt             |Date   |No      |Now           |Record creation timestamp    |
+
+|updatedAt             |Date   |No      |Now           |Last modification timestamp  |
+
+|isDeleted             |Bool   |No      |false         |Soft delete flag             |
+
+ 
+
+**Relationships:**
+
+ 
+
+- `accounts`: To-many relationship to Account entity (nullify on delete)
+
+ 
+
+**Indexes:**
+
+ 
+
+- bankName
+
+- expirationDate
+
+- isActive
+
+- isFavorite
+
+- isDeleted
+
+ 
+
+**Validation Rules:**
+
+ 
+
+- bonusAmount must be > 0
+
+- If expirationDate is set, must be in the future or recently past
+
+- eligibilityRestriction must be 0, 12, or 24
+
+ 
+
+-----
+
+ 
+
+### Entity: TaxYear
+
+ 
+
+Represents aggregate tax information for a calendar year.
+
+ 
+
+**Attributes:**
+
+ 
+
+|Attribute Name|Type   |Optional|Default       |Notes                     |
+
+|--------------|-------|--------|--------------|--------------------------|
+
+|id            |UUID   |No      |Auto-generated|Primary identifier        |
+
+|year          |Int16  |No      |-             |Calendar year (e.g., 2025)|
+
+|totalEarned   |Decimal|No      |0             |Total bonuses received    |
+
+|estimatedTaxes|Decimal|No      |0             |totalEarned × 0.25        |
+
+|accountsOpened|Int16  |No      |0             |Count of accounts opened  |
+
+|accountsClosed|Int16  |No      |0             |Count of accounts closed  |
+
+|notes         |String |Yes     |-             |Tax filing notes          |
+
+|updatedAt     |Date   |No      |Now           |Last recalculation        |
+
+ 
+
+**Relationships:**
+
+ 
+
+- None (calculated from Account entities)
+
+ 
+
+**Indexes:**
+
+ 
+
+- year (unique)
+
+ 
+
+**Notes:**
+
+ 
+
+- This entity is primarily calculated/cached data
+
+- Can be regenerated from Account entities
+
+- Updated whenever an account’s actualBonusDate is set
+
+ 
+
+-----
+
+ 
+
+## Core Data Configuration
+
+ 
+
+### Persistent Container Setup
+
+ 
+
+```swift
+
+// Core Data stack configuration
+
+lazy var persistentContainer: NSPersistentCloudKitContainer = {
+
+    let container = NSPersistentCloudKitContainer(name: "ChurningTracker")
+
+    
+
+    // CloudKit sync configuration
+
+    guard let description = container.persistentStoreDescriptions.first else {
+
+        fatalError("No persistent store description found")
+
+    }
+
+    
+
+    // Enable CloudKit sync
+
+    description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
+
+        containerIdentifier: "iCloud.com.yourcompany.churningtracker"
+
+    )
+
+    
+
+    // Enable persistent history tracking
+
+    description.setOption(true as NSNumber,
+
+                         forKey: NSPersistentHistoryTrackingKey)
+
+    
+
+    // Enable remote change notifications
+
+    description.setOption(true as NSNumber,
+
+                         forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+    
+
+    container.loadPersistentStores { description, error in
+
+        if let error = error {
+
+            fatalError("Unable to load persistent stores: \(error)")
+
+        }
+
+    }
+
+    
+
+    // Automatic merging of changes
+
+    container.viewContext.automaticallyMergesChangesFromParent = true
+
+    container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+
+    
+
+    return container
+
+}()
+
+```
+
+ 
+
+### Migration Strategy
+
+ 
+
+**Lightweight Migrations:**
+
+ 
+
+- Use lightweight migrations for all schema changes when possible
+
+- Add new optional attributes (don’t remove or change existing)
+
+- Use default values for new required attributes
+
+ 
+
+**Migration Roadmap:**
+
+ 
+
+- Version 1.0: Initial schema (as defined above)
+
+- Version 1.1+: Only additive changes
+
+- Heavy migrations avoided unless absolutely necessary
+
+ 
+
+-----
+
+ 
+
+## CloudKit Schema
+
+ 
+
+### Container Configuration
+
+ 
+
+**Container Identifier:** `iCloud.com.yourcompany.churningtracker`
+
+ 
+
+**Database:** Private Database (user’s personal data)
+
+ 
+
+**Record Zones:** Default zone (Core Data managed)
+
+ 
+
+### Record Types (Auto-Generated by Core Data)
+
+ 
+
+CloudKit record types are automatically generated from Core Data entities with `CD_` prefix:
+
+ 
+
+- `CD_Account`
+
+- `CD_Reminder`
+
+- `CD_Offer`
+
+- `CD_TaxYear`
+
+ 
+
+### CloudKit Considerations
+
+ 
+
+**Sync Behavior:**
+
+ 
+
+- Changes sync automatically when device is online
+
+- Conflicts resolved using “last write wins” (based on updatedAt)
+
+- Deletions handled via isDeleted flag (soft delete)
+
+ 
+
+**Performance:**
+
+ 
+
+- CloudKit batches changes efficiently
+
+- Minimal impact on battery/data
+
+- Works offline, syncs when online
+
+ 
+
+**Security:**
+
+ 
+
+- All data encrypted in transit and at rest
+
+- Only user can access their private database
+
+- No cross-user data sharing in MVP
+
+ 
+
+**Quotas (Per User):**
+
+ 
+
+- Storage: 1 GB (far exceeds needs - ~1000 accounts = ~5 MB)
+
+- Transfer: 10 GB/day (non-issue for this app)
+
+- Requests: 40 requests/second (non-issue)
+
+ 
+
+-----
+
+ 
+
+## Data Flow Diagrams
+
+ 
+
+### Account Creation Flow
+
+ 
+
+```
+
+User Input → ViewModel → Core Data → CloudKit Upload → Other Devices
+
+```
+
+ 
+
+### Reminder Generation Flow
+
+ 
+
+```
+
+Account.save() → Calculate Reminder Dates → Create Reminder Entities → Schedule Local Notifications
+
+```
+
+ 
+
+### Tax Calculation Flow
+
+ 
+
+```
+
+Account.actualBonusDate set → Filter by year → Sum bonusAmount → Calculate 25% → Update TaxYear entity
+
+```
+
+ 
+
+### Sync Flow
+
+ 
+
+```
+
+Device A: Change → Core Data → CloudKit Upload
+
+CloudKit Server: Process & Store
+
+Device B: CloudKit Download → Core Data Merge → UI Update
+
+```
+
+ 
+
+-----
+
+ 
+
+## Summary
+
+ 
+
+This comprehensive overview provides complete context for the bank account churning tracker app project, including:
+
+ 
+
+- Clear problem statement and market validation
+
+- Detailed MVP scope with rationale for exclusions
+
+- Complete business model and financial projections
+
+- Technical architecture decisions with trade-offs
+
+- 8-week development timeline
+
+- Go-to-market strategy
+
+- Complete Core Data and CloudKit schema
+
+ 
+
+The project is well-scoped for an indie developer, financially viable with minimal operating costs, and addresses a real need in an underserved market. The technical foundation (CloudKit + Core Data) eliminates backend costs while providing robust sync capabilities.
+
+ 
+
+**Next Steps:** Implement the Core Data models and begin Week 1 development tasks.​​​​​​​​​​​​​​​​

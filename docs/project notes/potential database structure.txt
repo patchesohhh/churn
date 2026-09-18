@@ -1,0 +1,1271 @@
+# Backend Data Requirements Analysis
+
+ 
+
+Yes, absolutely. While your MVP can work entirely on-device, having some centralized data would significantly improve the user experience and reduce friction. Here’s what makes sense:
+
+ 
+
+## Critical Backend Databases
+
+ 
+
+### 1. Bank Institution Database
+
+ 
+
+**Purpose:** Autocomplete and standardize bank names
+
+ 
+
+**Why it’s needed:**
+
+ 
+
+- Users will type “Chase” vs “JP Morgan Chase” vs “Chase Bank” inconsistently
+
+- Logo/branding makes the app feel more polished
+
+- Proper institution identification helps with eligibility tracking
+
+- Enables future features (filter by bank, see all Chase accounts, etc.)
+
+ 
+
+**Data Structure:**
+
+ 
+
+```
+
+Bank Institution
+
+├── id (UUID)
+
+├── official_name (string) - "JPMorgan Chase Bank, N.A."
+
+├── common_name (string) - "Chase"
+
+├── short_name (string) - "Chase"
+
+├── aliases (array) - ["Chase Bank", "JP Morgan Chase", "Chase"]
+
+├── logo_url (string) - Link to bank logo
+
+├── institution_type (enum) - "national_bank", "credit_union", "online_bank"
+
+├── website (string)
+
+├── is_active (boolean) - Still operating
+
+└── routing_numbers (array) - For potential future validation
+
+```
+
+ 
+
+**Initial Dataset Size:** ~200 institutions
+
+ 
+
+- Top 50 national banks (Chase, BofA, Wells Fargo, Citi, etc.)
+
+- Top 50 regional banks
+
+- Top 50 credit unions
+
+- Top 50 online banks (Ally, Marcus, etc.)
+
+ 
+
+**Data Sources:**
+
+ 
+
+- FDIC BankFind Suite (free, public API)
+
+- Manual curation for logos and common names
+
+- Community submissions over time
+
+ 
+
+**Implementation:**
+
+ 
+
+- **MVP:** Bundle a JSON file with top 100 banks in the app
+
+- **Phase 2:** Firebase/Supabase database with periodic updates
+
+- **Phase 3:** User contributions/corrections
+
+ 
+
+-----
+
+ 
+
+### 2. Bank Offer Database
+
+ 
+
+**Purpose:** Pre-fill offer details when user selects a bank
+
+ 
+
+**Why it’s needed:**
+
+ 
+
+- Huge time-saver for users (don’t have to type everything)
+
+- Reduces data entry errors
+
+- Ensures consistency in requirements tracking
+
+- Enables intelligent eligibility checking
+
+- Creates network effects (users benefit from each other’s data)
+
+ 
+
+**Data Structure:**
+
+ 
+
+```
+
+Bank Offer
+
+├── id (UUID)
+
+├── bank_id (foreign key to Bank Institution)
+
+├── offer_title (string) - "Chase Total Checking $300 Bonus"
+
+├── bonus_amount (decimal) - 300.00
+
+├── offer_type (enum) - "checking", "savings", "money_market"
+
+├── requirements (JSON) - Structured requirements
+
+│   ├── direct_deposit_required (boolean)
+
+│   ├── direct_deposit_amount (decimal) - 500.00
+
+│   ├── direct_deposit_count (integer) - 1
+
+│   ├── direct_deposit_timeframe_days (integer) - 90
+
+│   ├── minimum_opening_deposit (decimal) - 25.00
+
+│   ├── maintain_balance (decimal) - 0.00
+
+│   ├── maintain_balance_days (integer) - 0
+
+│   ├── debit_transactions_required (integer) - 0
+
+│   ├── bill_pay_required (boolean) - false
+
+│   └── other_requirements (string) - Free text
+
+├── eligibility_restriction (integer) - 12, 24, or 0 months
+
+├── eligibility_type (enum) - "no_bonus", "no_account", "no_relationship"
+
+├── new_customer_only (boolean)
+
+├── bonus_payout_timeframe_days (integer) - 90
+
+├── monthly_fee (decimal) - 12.00
+
+├── fee_waiver_requirements (string)
+
+├── offer_code (string) - "CHASE300" if applicable
+
+├── offer_url (string) - Direct link to bank's page
+
+├── terms_url (string) - Link to full T&Cs
+
+├── start_date (date) - When offer became available
+
+├── end_date (date) - When offer expires
+
+├── states_excluded (array) - ["OH", "WV"] etc.
+
+├── is_active (boolean)
+
+├── verification_status (enum) - "verified", "unverified", "expired"
+
+├── data_quality_score (integer) - 1-5, based on completeness
+
+├── created_at (timestamp)
+
+├── updated_at (timestamp)
+
+├── created_by (enum) - "admin", "scraper", "user_submission"
+
+└── submission_count (integer) - How many users reported this offer
+
+```
+
+ 
+
+**Data Sources:**
+
+ 
+
+**Primary Sources (Manual/Scraped):**
+
+ 
+
+- Doctor of Credit bank bonus page (they maintain active offers)
+
+- Bank websites directly
+
+- r/churning wiki and megathreads
+
+- Bankrate, NerdWallet, [Money.com](http://Money.com) bank bonus sections
+
+ 
+
+**Scraping Strategy:**
+
+ 
+
+- Weekly scrape of Doctor of Credit (with permission/respect for robots.txt)
+
+- Monthly scrape of major bank websites
+
+- RSS/API monitoring for new posts
+
+ 
+
+**Community Sourcing:**
+
+ 
+
+- Users can submit new offers (needs moderation queue)
+
+- Users can report expired offers
+
+- Users can confirm offer details
+
+- Upvote/downvote system for accuracy
+
+ 
+
+**Initial Dataset Size:** 50-100 active offers
+
+ 
+
+- Start with major banks only
+
+- Expand based on user demand
+
+- Quality > quantity initially
+
+ 
+
+-----
+
+ 
+
+### 3. Offer Terms & Conditions Archive
+
+ 
+
+**Purpose:** Store full T&Cs text for reference and ML training
+
+ 
+
+**Why it’s needed:**
+
+ 
+
+- Legal protection (user can reference exact terms)
+
+- Historical record (banks change offers, user needs proof)
+
+- Training data for future ML parsing feature
+
+- Helps resolve disputes with banks
+
+ 
+
+**Data Structure:**
+
+ 
+
+```
+
+Offer Terms
+
+├── id (UUID)
+
+├── offer_id (foreign key to Bank Offer)
+
+├── full_text (text) - Complete T&Cs
+
+├── pdf_url (string) - Link to archived PDF
+
+├── capture_date (timestamp)
+
+├── version (integer) - If terms change
+
+└── source_url (string) - Where it was captured
+
+```
+
+ 
+
+**Storage:**
+
+ 
+
+- S3 bucket for PDFs (cheap, $0.023/GB/month)
+
+- Database for text (searchable)
+
+- [Archive.org](http://Archive.org) as backup
+
+ 
+
+**Implementation:**
+
+ 
+
+- **MVP:** Not needed, users can store locally if they want
+
+- **Phase 2:** Store when offer is scraped
+
+- **Phase 3:** User uploads their specific T&Cs version
+
+ 
+
+-----
+
+ 
+
+### 4. User-Contributed Data
+
+ 
+
+**Purpose:** Crowdsource offer verification and updates
+
+ 
+
+**Why it’s needed:**
+
+ 
+
+- Offers change frequently (weekly/monthly)
+
+- Impossible for solo developer to track everything
+
+- Community validation improves data quality
+
+- Creates engagement and retention
+
+ 
+
+**Data Structure:**
+
+ 
+
+```
+
+User Submission
+
+├── id (UUID)
+
+├── user_id (anonymous hash) - Privacy-preserving
+
+├── submission_type (enum) - "new_offer", "update_offer", "expire_offer"
+
+├── bank_id (foreign key)
+
+├── offer_data (JSON) - Submitted offer details
+
+├── supporting_url (string)
+
+├── supporting_screenshot (string) - Uploaded image URL
+
+├── status (enum) - "pending", "approved", "rejected"
+
+├── created_at (timestamp)
+
+└── moderated_by (admin_id)
+
+```
+
+ 
+
+**Moderation:**
+
+ 
+
+- Admin review queue (you initially)
+
+- Trusted user program (Phase 2: users with 5+ verified submissions get fast-track)
+
+- Automatic approval for minor updates (expiration dates, etc.)
+
+ 
+
+-----
+
+ 
+
+## Additional Useful Databases
+
+ 
+
+### 5. Direct Deposit Coding Database
+
+ 
+
+**Purpose:** Help users understand which transactions count as “direct deposit”
+
+ 
+
+**Why it’s helpful:**
+
+ 
+
+- Banks have different definitions of direct deposit
+
+- Some accept ACH from external accounts, some don’t
+
+- Knowing in advance saves trial and error
+
+ 
+
+**Data Structure:**
+
+ 
+
+```
+
+Direct Deposit Data Point
+
+├── id (UUID)
+
+├── bank_id (foreign key)
+
+├── deposit_source (string) - "Payroll (ADP)", "Venmo", "PayPal", etc.
+
+├── deposit_type (string) - "ACH", "Wire", "Check"
+
+├── works_as_dd (enum) - "confirmed_yes", "confirmed_no", "unknown"
+
+├── date_tested (date)
+
+├── user_count (integer) - How many users confirmed
+
+└── notes (string)
+
+```
+
+ 
+
+**Data Sources:**
+
+ 
+
+- Doctor of Credit’s direct deposit guides
+
+- r/churning data points
+
+- User submissions
+
+ 
+
+**Implementation:**
+
+ 
+
+- **Phase 2 feature** - Nice to have but not critical
+
+- Display on account detail: “Direct Deposit Tips for [Bank]”
+
+ 
+
+-----
+
+ 
+
+### 6. State Availability Database
+
+ 
+
+**Purpose:** Track which offers are available in which states
+
+ 
+
+**Why it’s helpful:**
+
+ 
+
+- Many offers exclude certain states (e.g., OH, WV common exclusions)
+
+- Saves users time looking at ineligible offers
+
+- Can filter offers by user’s state
+
+ 
+
+**Data Structure:**
+
+ 
+
+```
+
+(Part of Bank Offer model)
+
+├── states_excluded (array) - ["OH", "WV", "RI"]
+
+├── states_included (array) - null (means all except excluded)
+
+└── territories_included (boolean) - PR, GU, etc.
+
+```
+
+ 
+
+**Implementation:**
+
+ 
+
+- Add to offer scraping
+
+- User sets home state in settings
+
+- Filter offers accordingly
+
+ 
+
+-----
+
+ 
+
+## Backend Architecture Recommendations
+
+ 
+
+### MVP (Months 0-3): Static JSON Bundle
+
+ 
+
+**What:**
+
+ 
+
+- Bundle a `banks.json` file (top 100 banks) in the app
+
+- Bundle an `offers.json` file (50 current offers) in the app
+
+- Update with each app release (monthly)
+
+ 
+
+**Pros:**
+
+ 
+
+- Zero backend costs
+
+- Works offline perfectly
+
+- Fast (no API calls)
+
+- Simple to implement
+
+ 
+
+**Cons:**
+
+ 
+
+- Manual updates required
+
+- Users must update app to get new offers
+
+- No real-time data
+
+- No user contributions
+
+ 
+
+**When to graduate:** 200+ active users, or frequent complaints about stale data
+
+ 
+
+-----
+
+ 
+
+### Phase 2 (Months 3-9): Simple Backend
+
+ 
+
+**Platform:** Supabase (Recommended) or Firebase
+
+ 
+
+**Why Supabase:**
+
+ 
+
+- PostgreSQL (robust, familiar)
+
+- Auto-generated REST API
+
+- Real-time subscriptions (optional)
+
+- Row-level security
+
+- Generous free tier:
+
+  - 500 MB database
+
+  - 1 GB file storage
+
+  - 2 GB bandwidth
+
+  - 50,000 monthly active users
+
+- $25/month Pro tier if you outgrow free
+
+ 
+
+**Why NOT Firebase:**
+
+ 
+
+- More expensive at scale ($25-100/month)
+
+- NoSQL can be limiting for relational data
+
+- Less SQL-friendly
+
+ 
+
+**Architecture:**
+
+ 
+
+```
+
+iOS App
+
+    ├── Core Data (local storage, primary)
+
+    ├── CloudKit (user's personal data sync)
+
+    └── Supabase (read-only: banks, offers)
+
+        ├── GET /banks (cached locally, update weekly)
+
+        ├── GET /offers (cached locally, update daily)
+
+        └── POST /submissions (user contributions)
+
+```
+
+ 
+
+**Costs at Scale:**
+
+ 
+
+- 0-500 users: Free tier sufficient
+
+- 500-5,000 users: $25/month (Pro tier)
+
+- 5,000+ users: $100-200/month (Team tier with more bandwidth)
+
+ 
+
+**Data Update Strategy:**
+
+ 
+
+- App checks for updates on launch (if >24 hours since last check)
+
+- Background fetch updates offer database daily
+
+- User can manually refresh
+
+- Push notification for major updates (new high-value offer)
+
+ 
+
+-----
+
+ 
+
+### Phase 3 (Month 9+): Advanced Backend
+
+ 
+
+**When you add:**
+
+ 
+
+- ML/AI parsing of T&Cs
+
+- Offer recommendation engine
+
+- User reputation system
+
+- Analytics dashboard
+
+ 
+
+**Additional Services:**
+
+ 
+
+- **Scraping service:** Python scripts on AWS Lambda or Render (cron jobs)
+
+  - Cost: $0-10/month (minimal compute)
+
+- **Image storage:** S3 for screenshots/PDFs
+
+  - Cost: $1-5/month for thousands of images
+
+- **ML API:** OpenAI API for T&C parsing
+
+  - Cost: Variable, estimate $20-50/month
+
+ 
+
+-----
+
+ 
+
+## Data Scraping Strategy
+
+ 
+
+### Target Sources (In Order of Value)
+
+ 
+
+**1. Doctor of Credit (Primary)**
+
+ 
+
+- URL: <https://www.doctorofcredit.com/best-bank-account-bonuses/>
+
+- Update frequency: Multiple times per week
+
+- Data quality: Excellent, manually curated
+
+- Scraping: Respectful (check once per day, respect robots.txt, consider supporting via Patreon)
+
+ 
+
+**2. Bank Websites Directly (Secondary)**
+
+ 
+
+- URLs: [chase.com/offers](http://chase.com/offers), [bankofamerica.com/promos](http://bankofamerica.com/promos), etc.
+
+- Update frequency: Weekly check of top 20 banks
+
+- Data quality: Authoritative but harder to parse
+
+- Scraping: More complex, changes frequently
+
+ 
+
+**3. Reddit r/churning (Tertiary)**
+
+ 
+
+- URL: [reddit.com/r/churning](http://reddit.com/r/churning)
+
+- Update frequency: Real-time
+
+- Data quality: Variable, but fast
+
+- Scraping: Use Reddit API (free tier)
+
+ 
+
+### Scraping Implementation
+
+ 
+
+**Tool:** Python with BeautifulSoup/Scrapy
+
+ 
+
+**Schedule:**
+
+ 
+
+- Doctor of Credit: Daily at 6am ET
+
+- Bank websites: Weekly on Sundays
+
+- Reddit: On-demand (not automated, manual check)
+
+ 
+
+**Data Pipeline:**
+
+ 
+
+```
+
+Scraper (Python)
+
+    ↓
+
+Raw HTML/JSON
+
+    ↓
+
+Parser (extract fields)
+
+    ↓
+
+Validator (check completeness)
+
+    ↓
+
+Supabase Database
+
+    ↓
+
+iOS App (daily sync)
+
+```
+
+ 
+
+**Hosting:**
+
+ 
+
+- AWS Lambda (free tier: 1M requests/month)
+
+- Render (Cron Jobs, free tier available)
+
+- GitHub Actions (free for public repos, hacky but works)
+
+ 
+
+**Cost:** $0-10/month
+
+ 
+
+-----
+
+ 
+
+## Data Quality & Maintenance
+
+ 
+
+### Quality Metrics
+
+ 
+
+**Offer Completeness Score (1-5):**
+
+ 
+
+- 1: Bank name + bonus amount only
+
+- 2: + Basic requirements (DD amount, timeframe)
+
+- 3: + Eligibility restrictions, fees
+
+- 4: + Expiration date, offer code, full requirements
+
+- 5: + Verified by multiple users, T&Cs archived
+
+ 
+
+**Freshness:**
+
+ 
+
+- Green: Updated within 7 days
+
+- Yellow: Updated within 30 days
+
+- Red: Updated >30 days ago
+
+- Expired: Past end_date or marked inactive
+
+ 
+
+### Moderation Workflow
+
+ 
+
+**New Offer Submission:**
+
+ 
+
+1. User submits offer details
+
+1. Goes to moderation queue (email notification to you)
+
+1. You verify against bank website
+
+1. Approve/reject/request changes
+
+1. If approved, goes live immediately
+
+1. User gets notification of approval
+
+ 
+
+**Update Offer:**
+
+ 
+
+1. User reports change (price, expiration, etc.)
+
+1. Quick review (2 minutes)
+
+1. Update live data
+
+1. Thank user in-app
+
+ 
+
+**Report Expired Offer:**
+
+ 
+
+1. User marks offer as expired
+
+1. Auto-flag if 3+ users report
+
+1. Verify on bank website
+
+1. Mark inactive
+
+1. Archive
+
+ 
+
+**Time Commitment:**
+
+ 
+
+- Initial database: 20-30 hours (one-time)
+
+- Weekly maintenance: 2-3 hours
+
+- Daily moderation: 15-30 minutes (once you have users submitting)
+
+ 
+
+-----
+
+ 
+
+## Privacy & Legal Considerations
+
+ 
+
+### User Data Privacy
+
+ 
+
+**What you collect for backend:**
+
+ 
+
+- Anonymous user ID (hashed, can’t identify individual)
+
+- Offer submissions (no personal account data)
+
+- General usage analytics (which offers are popular)
+
+ 
+
+**What you DON’T collect:**
+
+ 
+
+- Personal account numbers
+
+- Actual bonus amounts earned
+
+- Account opening dates
+
+- Any PII
+
+ 
+
+**Storage:**
+
+ 
+
+- User’s account data: CloudKit (Apple’s servers, encrypted)
+
+- Offer database: Supabase (you control, but no personal data)
+
+- Clear separation of concerns
+
+ 
+
+### Terms of Service Scraping
+
+ 
+
+**Legal considerations:**
+
+ 
+
+- Scraping publicly available data: Generally okay (hiQ Labs v. LinkedIn precedent)
+
+- Respect robots.txt: Good practice, reduces risk
+
+- Don’t overload servers: Rate limit, be respectful
+
+- Add value: You’re organizing/structuring data, not just republishing
+
+- Attribution: Credit Doctor of Credit when appropriate
+
+ 
+
+**Doctor of Credit Specific:**
+
+ 
+
+- Consider reaching out to them
+
+- They may allow API access or partnership
+
+- Or at minimum, support them via Patreon ($5/month = good karma)
+
+ 
+
+-----
+
+ 
+
+## Monetization via Data
+
+ 
+
+### Future Revenue Streams (Post-MVP)
+
+ 
+
+**Affiliate Links:**
+
+ 
+
+- Link to bank offers with affiliate codes
+
+- Earn $5-50 per signup
+
+- Could offset or replace subscription revenue
+
+- Example: “Open this Chase account” → your affiliate link → $20-30 commission
+
+ 
+
+**Bank Partnerships:**
+
+ 
+
+- Banks pay to be featured/promoted
+
+- “Verified offers” badge for paid banks
+
+- Could be substantial revenue ($500-2000/month per bank)
+
+ 
+
+**Data Licensing:**
+
+ 
+
+- Anonymized aggregate data about churning trends
+
+- Financial companies would pay for insights
+
+- Must be extremely careful about privacy
+
+ 
+
+**Note:** All of these are Phase 3+. Don’t complicate MVP with this.
+
+ 
+
+-----
+
+ 
+
+## Implementation Roadmap
+
+ 
+
+### MVP (Week 1-8): No Backend
+
+ 
+
+- Bundle banks.json with top 100 banks
+
+- Bundle offers.json with 50 current offers
+
+- Manual updates with app releases
+
+ 
+
+### Month 3-6: Add Basic Backend
+
+ 
+
+- Set up Supabase (free tier)
+
+- Migrate JSON files to Supabase
+
+- Add daily sync to app
+
+- Build basic scraper for Doctor of Credit
+
+- **Cost: $0/month**
+
+ 
+
+### Month 6-9: Add User Contributions
+
+ 
+
+- User submission form
+
+- Moderation queue
+
+- Email notifications
+
+- Trusted user program
+
+- **Cost: $0-25/month** (if you exceed free tier)
+
+ 
+
+### Month 9-12: Advanced Features
+
+ 
+
+- ML parsing of T&Cs (OpenAI API)
+
+- Offer recommendation algorithm
+
+- Affiliate link integration
+
+- **Cost: $25-75/month**
+
+ 
+
+### Year 2+: Scale
+
+ 
+
+- Multiple scrapers
+
+- Analytics dashboard
+
+- Bank partnerships
+
+- Dedicated backend infrastructure
+
+- **Cost: $100-300/month** (but revenue should be $2-10k/month by then)
+
+ 
+
+-----
+
+ 
+
+## Summary & Recommendations
+
+ 
+
+### What You Should Build:
+
+ 
+
+**Immediately (MVP):**
+
+ 
+
+1. ✅ Bundle `banks.json` with ~100 top institutions
+
+1. ✅ Bundle `offers.json` with ~50 current offers (manually curated)
+
+1. ✅ Update monthly via app releases
+
+ 
+
+**Month 3 (After initial traction):**
+
+4. ✅ Supabase database (free tier)
+
+5. ✅ Basic scraper for Doctor of Credit
+
+6. ✅ Daily sync in app
+
+ 
+
+**Month 6 (If 100+ paying users):**
+
+7. ✅ User submission system
+
+8. ✅ Moderation workflow
+
+9. ✅ Community verification
+
+ 
+
+**Month 9+ (If 300+ paying users):**
+
+10. ✅ Advanced features (ML, recommendations)
+
+11. ✅ Affiliate integration
+
+12. ✅ Bank partnerships
+
+ 
+
+### Initial Time Investment:
+
+ 
+
+**Database creation (one-time):**
+
+ 
+
+- Banks database: 8-10 hours (scrape FDIC, add logos, organize)
+
+- Offers database: 15-20 hours (research top 50 offers, structure data)
+
+- **Total: 25-30 hours** over 2-3 weeks
+
+ 
+
+**Ongoing maintenance:**
+
+ 
+
+- Week 1-12 (MVP): 30 min/week (update offers.json)
+
+- Month 3+: 2 hours/week (monitor scraper, moderate submissions)
+
+ 
+
+This approach keeps your MVP lean while setting you up for powerful features once you’ve validated the product. The backend becomes a competitive moat once you have comprehensive, up-to-date offer data that users can’t easily get elsewhere.​​​​​​​​​​​​​​​​

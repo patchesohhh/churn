@@ -1,0 +1,143 @@
+# Churn — iOS bank-bonus tracker — Project Instructions
+
+Native SwiftUI + Core Data app for tracking cash bonuses from bank account
+opening promotions ("churning"), including a dual-income household's direct
+deposit scheduling. Solo indie project, MVP scope, no backend — **all data
+is user-entered and stored locally in Core Data.** No API integration, no
+CloudKit sync, no StoreKit paywall in this build — those are explicitly
+deferred to a later phase.
+
+Xcode project: `ChurnApp/ChurnApp.xcodeproj`, target `ChurnApp`.
+Uses Xcode's modern **synchronized file groups**
+(`PBXFileSystemSynchronizedRootGroup`) — any `.swift` file placed under
+`ChurnApp/ChurnApp/` is automatically included in the app target. No
+`project.pbxproj` edits needed to add files. (A `ChurnAppTests` target does
+require a `project.pbxproj` edit to create — see Testing below.)
+
+Source docs live in `docs/project notes/` (originally `.rtf`, converted to
+`.txt` — read the `.txt` versions). They describe an 8-week plan; this build
+compresses to a 2-day MVP. When the docs conflict with this file, **this
+file wins** — it reflects scope decisions made after the docs were written.
+
+## Architecture
+
+- **MVVM-ish, hybrid Core Data access** (see UI Summary doc for full
+  rationale): views use `@FetchRequest` directly for lists. `ChurningStore`
+  (`Store/ChurningStore.swift`) is a single `@Observable` object, injected
+  once at app entry, that holds ONLY calculations shared across multiple
+  views (YTD earnings, pending bonus total, all-time earnings, eligibility
+  checks). It does not cache data, does not replace `@FetchRequest`, does
+  not manage saves — views save to Core Data directly.
+- **Low file coupling.** Structure code so a person (or agent) fixing one
+  view only needs to open 2-3 files, not the whole codebase. Prefer a new
+  small file over adding an unrelated responsibility to an existing one.
+- **Reuse visual/UI elements liberally** — this is the one place where the
+  low-coupling rule bends. Build a real component library
+  (`Views/Components/`) and reuse it: custom buttons, cards, charts, badges,
+  money-formatting text, empty states. Don't re-implement the same card
+  layout three times across three feature folders.
+- **Native elements over custom ones.** Use system components and modern
+  materials wherever they fit: `.glassEffect()` / Liquid Glass containers,
+  native `Button`, `Menu`, `Toggle`, `DatePicker`, `Form`, `List` with swipe
+  actions, SF Symbols. Don't hand-roll a control iOS already ships.
+- **No third-party dependencies.** Apple frameworks only (SwiftUI, Core
+  Data, UserNotifications, Foundation).
+- **No DTOs.** Nothing here talks to an API yet.
+
+## Data model
+
+Core Data entities (see `Models/ChurnDataModel.xcdatamodeld` once built):
+
+- **Person** — one row per household earner (2 for this user: dual income).
+  Pay structure, paycheck amount, next paycheck date, max concurrent DD
+  accounts allowed by employer, default/home bank, a display color for UI
+  differentiation. Added beyond the original docs — the docs referenced
+  "Person 1/2 config" in Settings without ever defining the entity.
+- **Account** — a bank account being churned: bank name, type, opening
+  date, bonus amount/structure/requirements, min balance, expected/actual
+  bonus date, status, close date, eligibility window (12/24 mo), notes.
+  Belongs to a `Person`.
+- **DirectDeposit** — one scheduled/posted paycheck allocation to an
+  Account. Added beyond the original docs (flagged there as a likely-needed
+  entity that was never defined) — required for Home's paycheck preview,
+  the Calendar view, and per-account pay-date history.
+- **Reminder** — check bonus / close account / update DD / meet
+  requirement / custom. Belongs to an `Account`.
+- **Offer** — a bank offer entered manually by the user (bank, bonus,
+  requirements, expiration, favorite flag). Not backed by any bundled JSON
+  or API in this build — pure user CRUD.
+
+**Explicitly cut from the documented schema:** `TaxYear` (compute tax
+estimate on the fly from Account data instead of caching it — one line of
+math doesn't need its own entity). The rich backend `Offer`/marketplace
+schema in `potential database structure.txt` is Phase 2+ and should not be
+implemented now — if you're looking at that file for the `Offer` entity,
+you're reading the wrong doc; use the simpler Core Data schema instead.
+
+## Testing — required, this is how progress gets verified without a human at the wheel
+
+- Every non-trivial piece of logic (Core Data validation, `CalculationService`
+  functions, view models if any) gets an XCTest. Tests must be runnable
+  headlessly via:
+  ```
+  xcodebuild -project ChurnApp/ChurnApp.xcodeproj -scheme ChurnApp \
+    -destination 'platform=iOS Simulator,name=iPhone 16' test
+  ```
+- Before marking any task done, run the build (`xcodebuild ... build`) and
+  the test suite and confirm both are green. Don't hand off broken code.
+- Use an in-memory `NSPersistentContainer` (`PersistenceController.preview`
+  or a dedicated test helper) for all tests — never touch the real store.
+
+## Previews — required on every view
+
+Every SwiftUI `View` file gets one or more `#Preview` blocks using
+realistic sample data (an in-memory Core Data context, not the live store),
+so a human can open the file in Xcode and see/tweak it without running the
+full app. Prefer multiple previews per view when there's meaningfully
+different state to show (e.g. empty state vs. populated, light vs. dark).
+
+## Code style
+
+Optimize file layout for AI parsing/maintenance (predictable structure,
+one primary type per file, clear section `// MARK:` comments) but be
+generous with comments aimed at a human reader — explain *why*, not just
+what, especially around Core Data relationship delete rules, calculation
+logic, and anywhere this build deliberately diverges from the source docs.
+
+## File structure (target)
+
+```
+ChurnApp/ChurnApp/
+  MyApp.swift                  — app entry, injects PersistenceController + ChurningStore
+  ContentView.swift            — root TabView (5 tabs)
+  Models/
+    ChurnDataModel.xcdatamodeld
+    PersistenceController.swift
+    Enums.swift                — AccountType, AccountStatus, BonusStructure,
+                                  ReminderType, DirectDepositStatus, PayFrequency
+  Store/
+    ChurningStore.swift
+  Services/
+    CalculationService.swift   — pure functions, Foundation only
+    NotificationService.swift
+  Views/
+    Home/
+    Calendar/                  — flat/grouped list stub, NOT the full Gantt chart (out of scope)
+    Accounts/
+    Offers/
+    Settings/
+    Components/                — reusable: StatCard, MoneyText, SectionHeaderView,
+                                  StatusBadge, EmptyStateView, button styles, etc.
+ChurnAppTests/                 — XCTest target (create if missing)
+```
+
+## Explicitly out of scope for this build
+
+- Vertical Gantt chart with visual DD connectors (Calendar tab ships as a
+  simple list instead)
+- CloudKit sync
+- StoreKit subscription/paywall
+- Any bundled/API-sourced offer data — offers are 100% manual entry
+- Offer marketplace/crowdsourcing/verification backend
+- DD allocation optimizer / recommendation algorithm
+- Real-time multi-device sharing between the two people in a household

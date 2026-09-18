@@ -1,0 +1,743 @@
+# App Naming Analysis
+
+ 
+
+## “Churn” as the App Name
+
+ 
+
+**Verdict: YES, this is an excellent choice.**
+
+ 
+
+**Reasons it works:**
+
+ 
+
+1. **SEO Gold**
+
+ 
+
+- “Churn” is THE term the community uses
+
+- Zero competition in the App Store for this context
+
+- When users search “bank account churn” or “churning tracker,” you’ll dominate
+
+- Short, memorable, one-word names are valuable and rare
+
+ 
+
+1. **Community Recognition**
+
+ 
+
+- r/churning members will instantly understand
+
+- No explanation needed for target demographic
+
+- Signals you’re “in the know” about the practice
+
+ 
+
+1. **Brandability**
+
+ 
+
+- Easy to say, spell, remember
+
+- Works well for domain: [churnapp.com](http://churnapp.com), getchurn.app
+
+- Clean icon potential
+
+- Room to own the term in this vertical
+
+ 
+
+1. **Expansion Potential**
+
+ 
+
+- If you add credit card tracking: still fits
+
+- If you pivot to general banking: can reframe as “account churning”
+
+- Flexible enough for growth
+
+ 
+
+**Potential Concerns (Minor):**
+
+ 
+
+- Could confuse non-churners, but they’re not your audience anyway
+
+- SaaS industry uses “churn” for user retention, but different context/audience
+
+- Restaurant app “Churn Ordering” isn’t competition (different category)
+
+ 
+
+**Alternative if you want more clarity:**
+
+ 
+
+- “Churn: Bank Bonuses” (still leads with Churn for SEO)
+
+- Just “Churn” is cleaner and stronger
+
+ 
+
+## App Store Listing
+
+ 
+
+### Primary Options:
+
+ 
+
+**Option 1 (Direct):**
+
+ 
+
+- **Title:** Churn
+
+- **Subtitle:** Bank Account Bonus Tracker
+
+ 
+
+**Option 2 (SEO-heavy):**
+
+ 
+
+- **Title:** Churn - Bank Bonus Tracker
+
+- **Subtitle:** Track Account Opening Rewards
+
+ 
+
+**Option 3 (Value-focused):**
+
+ 
+
+- **Title:** Churn
+
+- **Subtitle:** Earn More from Bank Bonuses
+
+ 
+
+**Recommendation: Option 1**
+
+ 
+
+- Clean, confident
+
+- “Bank Account Bonus Tracker” hits key search terms
+
+- Subtitle can be 30 characters (you have room)
+
+ 
+
+### Tagline/Description First Line Options:
+
+ 
+
+Remember: First 170 characters show without “more” click.
+
+ 
+
+**Option A (Problem-focused):**
+
+“Stop missing bank bonuses. Track account requirements, eligibility windows, and reminders to close accounts before fees hit.”
+
+ 
+
+**Option B (Outcome-focused):**
+
+“Earn thousands from bank account bonuses without spreadsheets. Track requirements, deadlines, and eligibility across multiple accounts.”
+
+ 
+
+**Option C (Proof-focused):**
+
+“We made $7,000 in 2024 opening bank accounts. Churn helps you track bonuses, requirements, and eligibility so you never miss a reward.”
+
+ 
+
+**Recommendation: Option C**
+
+ 
+
+- Leads with credibility/proof
+
+- Specific number (social proof)
+
+- Immediately communicates value
+
+- Shows it’s built by practitioners, not outsiders
+
+ 
+
+## Design Aesthetic
+
+ 
+
+Given your target audience and product positioning, here’s my recommendation:
+
+ 
+
+### Recommended: **Professional & Accessible**
+
+ 
+
+**Why this aesthetic:**
+
+ 
+
+1. **Audience Expectations**
+
+ 
+
+- Users are managing real money ($300-500 per account)
+
+- Financially sophisticated but not financial professionals
+
+- Want to trust the app with important tracking
+
+- Age 25-45 demographic appreciates polish without stuffiness
+
+ 
+
+1. **Product Nature**
+
+ 
+
+- This is a tool, not entertainment
+
+- Users need to input accurate data quickly
+
+- Information density matters (multiple accounts, dates, amounts)
+
+- Frequent reference app (checking reminders, updating status)
+
+ 
+
+1. **Competitive Positioning**
+
+ 
+
+- More polished than spreadsheets (obvious bar)
+
+- More serious than “whimsical” apps
+
+- Less intimidating than “power user” finance software
+
+- Approachable enough for newcomers to churning
+
+ 
+
+1. **Business Model**
+
+ 
+
+- Paid app ($5/month) signals quality
+
+- Professional design justifies price point
+
+- Users expect premium experience for subscription
+
+ 
+
+### Visual Direction: “Professional & Accessible”
+
+ 
+
+**Color Palette:**
+
+ 
+
+- **Primary:** Deep blue or teal (trust, financial, calming)
+
+  - Example: SF Blue (#007AFF) or custom: #0A84FF
+
+- **Accent:** Green for success/earnings (money, growth, positive)
+
+  - Example: #34C759 for bonuses received
+
+- **Secondary:** Warm orange/amber for warnings/reminders
+
+  - Example: #FF9500 for upcoming deadlines
+
+- **Background:** Clean white/light gray with dark mode support
+
+  - iOS system backgrounds for native feel
+
+ 
+
+**Typography:**
+
+ 
+
+- **Primary:** SF Pro (iOS system font)
+
+  - Familiar, readable, free
+
+  - Excellent for data display
+
+- **Hierarchy:** Strong use of weights (Regular, Medium, Semibold)
+
+- **Numbers:** SF Pro Rounded for financial amounts (friendly but clear)
+
+ 
+
+**Layout Principles:**
+
+ 
+
+- **Cards for accounts:** Each account is a distinct, tappable card
+
+- **Clear information hierarchy:** Amount → Bank → Status at a glance
+
+- **Generous spacing:** Not cramped, easy to scan
+
+- **Smart defaults:** Most common fields prominent, advanced options hidden
+
+- **iOS native controls:** Standard switches, pickers, date selectors
+
+ 
+
+**Iconography:**
+
+ 
+
+- **SF Symbols throughout:** Consistent with iOS
+
+- **Custom app icon:** Simple, recognizable
+
+  - Possibly: Circular arrows (churn motion) + dollar sign
+
+  - Or: Stylized bank building + rotation indicator
+
+  - Avoid: Generic money bag or overly literal imagery
+
+ 
+
+**Visual Style:**
+
+ 
+
+- **Not:** Skeuomorphic (fake textures, shadows)
+
+- **Not:** Overly minimal (can feel cold/incomplete)
+
+- **Yes:** Modern iOS design language
+
+- **Yes:** Subtle depth (light shadows, proper hierarchy)
+
+- **Yes:** Color used purposefully, not decoratively
+
+ 
+
+**Data Visualization:**
+
+ 
+
+- **Dashboard:** Simple, large numbers (YTD earnings, tax estimate)
+
+- **Account list:** Scannable cards with key info visible
+
+- **Reminders:** Calendar-style or list with clear due dates
+
+- **Optional Phase 2:** Charts/graphs for earnings over time
+
+ 
+
+### Design References (Similar aesthetic):
+
+ 
+
+**Apps that nail “Professional & Accessible”:**
+
+ 
+
+- **Things 3:** Clean, purposeful, data-dense but not overwhelming
+
+- **Carrot Weather:** Personality without compromising function
+
+- **Fantastical:** Professional calendar with delightful details
+
+- **YNAB (You Need A Budget):** Financial but approachable
+
+ 
+
+**What to avoid:**
+
+ 
+
+- **Mint:** Too corporate, dated design
+
+- **Robinhood:** Too “playful” for serious tracking
+
+- **Generic banking apps:** Too sterile, no personality
+
+- **Notion:** Too flexible/complex for this use case
+
+ 
+
+### Personality/Voice
+
+ 
+
+**App Personality:**
+
+ 
+
+- Competent but not stuffy
+
+- Helpful but not patronizing
+
+- Celebratory about earnings (it’s fun to see totals grow!)
+
+- Straightforward about requirements (no fluff)
+
+ 
+
+**Empty States:**
+
+ 
+
+- “No accounts yet. Add your first bank to start earning.”
+
+- “No reminders due. You’re all caught up! 🎉”
+
+- “Add an account to see your earnings grow.”
+
+ 
+
+**Error Messages:**
+
+ 
+
+- Clear, actionable, never blaming
+
+- “Couldn’t save account. Check your internet connection and try again.”
+
+ 
+
+**Success Messages:**
+
+ 
+
+- Brief positive reinforcement
+
+- “Account added! ✓”
+
+- “Reminder set for [date]”
+
+ 
+
+### Why NOT Other Aesthetics:
+
+ 
+
+**Why not “Simple & Whimsical”:**
+
+ 
+
+- Risk trivializing actual money management
+
+- May not justify $5/month price
+
+- Could feel less trustworthy
+
+- Harder to be information-dense
+
+ 
+
+**Why not “Elegant & Rich”:**
+
+ 
+
+- Can skew pretentious for this audience
+
+- Dark, heavy colors might feel like overkill
+
+- Risk feeling like it’s trying too hard
+
+- Not aligned with practical nature of churning
+
+ 
+
+**Why not “Straightforward & Accessible” (too far):**
+
+ 
+
+- Risk being boring/forgettable
+
+- Harder to build brand affinity
+
+- May look unfinished or cheap
+
+- Won’t excite users to share with others
+
+ 
+
+## App Icon Concepts
+
+ 
+
+### Concept 1: “The Churn”
+
+ 
+
+- Circular arrows forming a cycle
+
+- Dollar sign or currency symbol in center
+
+- Clean, geometric
+
+- Colors: Blue circle, green/gold center
+
+ 
+
+### Concept 2: “Bank + Motion”
+
+ 
+
+- Simplified bank building (columns)
+
+- Subtle rotation indicator or arrows
+
+- Modern, minimal
+
+- Colors: Deep blue building, accent color arrows
+
+ 
+
+### Concept 3: “Stack + Flow”
+
+ 
+
+- Stacked layers (representing multiple accounts)
+
+- Flowing/moving indicator
+
+- Abstract but clear
+
+- Colors: Gradient blue-to-green showing growth
+
+ 
+
+**Recommendation: Concept 1**
+
+ 
+
+- Most directly communicates “churning”
+
+- Recognizable at small sizes
+
+- Scalable to different contexts
+
+- Not too literal (avoids looking like banking app)
+
+ 
+
+## Complete App Store Presence
+
+ 
+
+### Full Listing Mockup:
+
+ 
+
+**App Name:** Churn
+
+ 
+
+**Subtitle:** Bank Account Bonus Tracker
+
+ 
+
+**Description:**
+
+“We made $7,000 in 2024 opening bank accounts. Churn helps you track bonuses, requirements, and eligibility so you never miss a reward.
+
+ 
+
+Stop using spreadsheets to manage bank account bonuses. Churn organizes everything: opening dates, bonus requirements, eligibility windows, minimum balances, and reminders to close accounts before fees hit.
+
+ 
+
+**Track Multiple Accounts**
+
+• Store all account details in one place
+
+• Record bonus amounts and requirements
+
+• Track 12- and 24-month eligibility restrictions
+
+• Manage accounts for couples/households
+
+• Know when it’s safe to open accounts again
+
+ 
+
+**Never Miss a Deadline**
+
+• Automatic reminders when bonuses should post
+
+• Alerts to close accounts before monthly fees
+
+• Notifications to update direct deposit settings
+
+• Custom reminders for specific requirements
+
+ 
+
+**See Your Earnings**
+
+• Year-to-date bonus totals
+
+• Lifetime earnings across all accounts
+
+• Tax estimate calculator (1099-INT reporting)
+
+• Account status dashboard
+
+ 
+
+**Built by Churners, for Churners**
+
+Churn was created by someone who earned thousands through bank account bonuses and got tired of complicated spreadsheets. Every feature solves a real problem from actual churning experience.
+
+ 
+
+No connection to your bank accounts required. Simple, manual tracking that respects your privacy and puts you in control.
+
+ 
+
+**Subscription includes:**
+
+• Unlimited accounts
+
+• iCloud sync across devices
+
+• All features, no ads
+
+• Regular updates and improvements
+
+ 
+
+Start earning more from bank bonuses. Download Churn today.”
+
+ 
+
+**Screenshots (6.7” iPhone):**
+
+ 
+
+1. Dashboard showing YTD earnings ($4,250) with active accounts list
+
+1. Account detail screen showing requirements and dates
+
+1. Reminders list with upcoming actions
+
+1. Add account form (clean, simple)
+
+1. Tax summary for year
+
+1. Account list view (multiple accounts visible)
+
+ 
+
+**Keywords (100 characters max):**
+
+“bank bonus,account,churning,rewards,checking,savings,direct deposit,finance,money,tracker”
+
+ 
+
+**Categories:**
+
+ 
+
+- Primary: Finance
+
+- Secondary: Productivity
+
+ 
+
+## Domain Recommendations
+
+ 
+
+**Priority:**
+
+ 
+
+1. **churnapp.com** (if available) - clean, obvious
+
+1. **getchurn.app** - modern, clear call-to-action
+
+1. **churn.app** - premium, short (likely expensive/unavailable)
+
+1. **usechurn.com** - clear, available backup
+
+ 
+
+## Social Media Handles
+
+ 
+
+**Target:** @churnapp or @getchurn
+
+ 
+
+- Twitter/X: @churnapp
+
+- Instagram: @churnapp (less critical for this audience)
+
+- Reddit: u/churnapp (for community engagement)
+
+ 
+
+## Summary & Recommendations
+
+ 
+
+**App Name:** Churn ✓
+
+ 
+
+**Subtitle:** Bank Account Bonus Tracker
+
+ 
+
+**Design Aesthetic:** Professional & Accessible
+
+ 
+
+- Clean, modern iOS design
+
+- Blue/teal primary, green accents
+
+- SF Pro typography
+
+- Card-based layouts
+
+- Information-dense but scannable
+
+ 
+
+**App Icon:** Circular arrows with dollar symbol (Concept 1)
+
+ 
+
+**Tagline:** “We made $7,000 in 2024 opening bank accounts. Churn helps you track bonuses, requirements, and eligibility so you never miss a reward.”
+
+ 
+
+**Domain:** [churnapp.com](http://churnapp.com) or getchurn.app
+
+ 
+
+This positioning establishes you as the definitive app for bank account churning, justifies premium pricing through professional design, and speaks directly to your target audience’s needs without compromising on clarity or trustworthiness.​​​​​​​​​​​​​​​​

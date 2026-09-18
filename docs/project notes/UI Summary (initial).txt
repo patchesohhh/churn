@@ -1,0 +1,1595 @@
+# Churn iOS App: UI/UX Architecture & Implementation Plan
+
+ 
+
+## Document Purpose
+
+This document captures all architectural and UI/UX decisions made during the planning phase of the Churn iOS app. It provides complete context for future development work and can be used by AI agents or human developers to understand the rationale behind structural decisions.
+
+ 
+
+---
+
+ 
+
+## Table of Contents
+
+1. [Core UI/UX Design Decisions](#core-uiux-design-decisions)
+
+2. [Data Architecture Strategy](#data-architecture-strategy)
+
+3. [File Structure & Organization](#file-structure--organization)
+
+4. [Implementation Phases](#implementation-phases)
+
+5. [Feature Planning & Future Roadmap](#feature-planning--future-roadmap)
+
+6. [Design Principles & Constraints](#design-principles--constraints)
+
+ 
+
+---
+
+ 
+
+## Core UI/UX Design Decisions
+
+ 
+
+### Main View Structure
+
+ 
+
+#### Home Screen Layout
+
+The home screen is the primary interface users will see most frequently. It prioritizes actionable information and status at a glance.
+
+ 
+
+**Components (in order of appearance):**
+
+ 
+
+1. **Earnings Carousel (Top)**
+
+   - Large text display showing dollar amounts
+
+   - Swipeable carousel with three metrics:
+
+     - Money earned Year-to-Date (YTD)
+
+     - Total pending bonuses (promotions currently being worked on)
+
+     - Total earned all-time (lifetime achievement)
+
+   - **Rationale:** Users want immediate validation of progress. These three metrics answer "How am I doing?" at different time scales.
+
+ 
+
+2. **Active Promotions Section**
+
+   - Shows accounts with pending bonuses that require attention
+
+   - Prioritized at top because these need user action
+
+   - Card-based layout, one card per account
+
+   - Each card shows: Bank name, requirements progress, days until bonus should post
+
+   - Tapping a card opens detailed view showing all pay dates and amounts being applied to that promotion
+
+   - **Rationale:** "What needs attention right now" is more urgent than historical data.
+
+ 
+
+3. **Next Paychecks Mini-Preview**
+
+   - Shows upcoming 2-3 paychecks with direct deposit allocations
+
+   - Visual indicator if a DD series is about to complete
+
+   - "View full schedule →" button links to dedicated Calendar view
+
+   - Collapsed by default or shows limited preview to avoid overwhelming home screen
+
+   - **Rationale:** Users need awareness of upcoming paycheck allocations but don't need full calendar view on home screen.
+
+ 
+
+4. **Maintaining Section** (Collapsed by Default)
+
+   - Accounts still open but bonus already received
+
+   - Less prominent since they require less attention
+
+   - Shows days until safe to close
+
+   - **Rationale:** Progressive disclosure - don't clutter home screen with non-urgent items.
+
+ 
+
+5. **Quick Actions** (Floating Button or Toolbar)
+
+   - Add new account
+
+   - Log bonus received
+
+   - Update DD settings
+
+   - **Rationale:** Primary actions easily accessible from main screen.
+
+ 
+
+**Design Decision: No Toggle Between Views**
+
+- Originally considered toggle between "accounts view" and "DD split view"
+
+- **Decision:** Make these separate sections on same screen instead
+
+- **Rationale:** These are different mental models ("what accounts am I working on?" vs "where is my money going?"). Users need to see both simultaneously, not choose between them.
+
+ 
+
+### Navigation Structure
+
+ 
+
+**Tab Bar (5 Tabs):**
+
+ 
+
+1. **Home** - Dashboard with carousel, active promotions, paycheck preview
+
+2. **Calendar/Schedule** - Full Gantt chart of direct deposits with detailed breakdown
+
+3. **Accounts** - Complete list of ALL accounts (active, maintaining, closed) with search and filters
+
+4. **Offers** - Browse available bank offers, mark favorites, track expiration dates
+
+5. **More** - Settings, tax summary, person configuration, about, terms, best practices
+
+ 
+
+**Rationale for Tab Structure:**
+
+- Home provides quick status check (5-second scan)
+
+- Calendar is important but not urgent enough for prime home screen real estate
+
+- Accounts list needed for historical reference and searching old accounts
+
+- Offers supports research phase of churning workflow
+
+- More contains configuration and reference material
+
+ 
+
+### Calendar/Schedule View Details
+
+ 
+
+This view gets its own dedicated space due to complexity and importance of direct deposit visualization.
+
+ 
+
+**Vertical Gantt Chart:**
+
+- Timeline runs down the left side (dates)
+
+- Horizontal lanes for each person (if couple)
+
+- Colored bars represent each bank's DD series
+
+- Visual connectors between consecutive DDs to same bank (shows "working on Chase for 3 months")
+
+- **Rationale:** Vertical orientation fits mobile screens better than horizontal. Visual connections make it obvious which DDs are part of same promotion requirement.
+
+ 
+
+**Paycheck Details:**
+
+- Tap a date to expand and see breakdown
+
+- Shows: total paycheck amount, breakdown by bank allocation, remaining amount (if any)
+
+- Quick edit button available
+
+- **Rationale:** Progressive disclosure - overview at glance, details on demand.
+
+ 
+
+**Visual Indicators:**
+
+- **Green:** DD series complete, bonus should post soon
+
+- **Blue:** In progress, on track
+
+- **Orange:** First DD to a new bank (important to verify it works)
+
+- **Red:** Issue or attention needed
+
+- **Rationale:** Color coding provides instant status recognition without reading text.
+
+ 
+
+**Gantt Chart Connections:**
+
+- Consecutive direct deposits to the same account are visually connected
+
+- Creates appearance of timeline showing how long each promotion is being worked
+
+- **Rationale:** Makes it immediately clear which paychecks are part of same requirement series.
+
+ 
+
+### Settings & Configuration
+
+ 
+
+**Person Setup (Person 1 & Person 2):**
+
+Each person's configuration includes:
+
+- Pay structure (biweekly, monthly, semi-monthly, commission-based, etc.)
+
+- Paycheck amount
+
+- Next paycheck date (for biweekly or irregular schedules)
+
+- Number of concurrent bank accounts allowed for direct deposit (employer limitation)
+
+- Default bank (where remainder of paycheck goes if not fully allocated to churning accounts)
+
+ 
+
+**Rationale:** This data is essential for the app to provide intelligent DD allocation suggestions and warnings about violating concurrent DD limits.
+
+ 
+
+---
+
+ 
+
+## Data Architecture Strategy
+
+ 
+
+### The Core Data vs. ChurningStore Decision
+
+ 
+
+This was a critical architectural decision that balances MVP simplicity with future scalability.
+
+ 
+
+#### Problem Statement
+
+Two main approaches were considered:
+
+1. **Direct Core Data:** Views use `@FetchRequest` to fetch data directly from Core Data
+
+2. **ChurningStore Layer:** Views fetch data from an observable store object that manages Core Data
+
+ 
+
+#### Decision: Hybrid Approach
+
+ 
+
+**What we're building:**
+
+- Minimal ChurningStore that handles shared computed properties
+
+- Views still fetch data directly from Core Data for lists using `@FetchRequest`
+
+- Store provides centralized calculations used across multiple views
+
+ 
+
+**ChurningStore Responsibilities:**
+
+- Calculate YTD earnings (used in carousel, tax view, dashboard)
+
+- Calculate total pending bonuses (used in carousel, dashboard)
+
+- Calculate all-time earnings (used in carousel, dashboard)
+
+- Provide eligibility checking across all accounts
+
+- Future: Recommendation algorithm, DD optimization, complex state management
+
+ 
+
+**What ChurningStore Does NOT Do (in MVP):**
+
+- Does not cache or store account data
+
+- Does not replace `@FetchRequest` for lists
+
+- Does not manage Core Data saves/updates (views do this directly)
+
+ 
+
+#### Rationale for Hybrid Approach
+
+ 
+
+**Benefits:**
+
+1. **No premature optimization:** Views fetch what they need directly - simple and fast
+
+2. **No code duplication:** Expensive calculations (like YTD earnings) live in one place instead of being recalculated in every view that needs them
+
+3. **Easy to expand:** When future features need more state management (API integration, user sharing), ChurningStore foundation is already in place
+
+4. **Testable:** Calculation logic can be tested in isolation without involving Core Data or views
+
+5. **Minimal upfront cost:** Just one file, injected once at app entry point
+
+ 
+
+**Why not full ChurningStore now:**
+
+- Adds boilerplate and complexity for features we don't need yet
+
+- Another layer to debug
+
+- Requires manual sync when Core Data changes
+
+- YAGNI (You Aren't Gonna Need It) - wait until we actually need it
+
+ 
+
+**Why not direct Core Data only:**
+
+- Would lead to duplicated calculation code across views
+
+- Would make testing harder
+
+- Would make future API integration more painful
+
+- Store layer is easy to add now, painful to retrofit later for shared calculations
+
+ 
+
+**Migration Path (when needed later):**
+
+Moving from hybrid to full ChurningStore is straightforward:
+
+```swift
+
+// Before (MVP)
+
+@FetchRequest(...) var accounts: FetchedResults<Account>
+
+ 
+
+// After (adding full store)
+
+@Environment(ChurningStore.self) var store
+
+// Use store.accounts instead of FetchRequest
+
+```
+
+ 
+
+View logic stays identical - just changing data source.
+
+ 
+
+#### When to Expand ChurningStore
+
+ 
+
+**Trigger 1: API Integration**
+
+- Store fetches from both Core Data AND Supabase/backend
+
+- Views don't care about data source
+
+ 
+
+**Trigger 2: User Sharing Feature**
+
+- Store manages merge conflicts between two users' changes
+
+- Store handles real-time updates from partner's device
+
+ 
+
+**Trigger 3: Performance Issues**
+
+- Store caches frequently accessed data
+
+- Store batches Core Data fetches to reduce database hits
+
+ 
+
+**Until then:** Hybrid approach gives 80% of benefits with 20% of complexity.
+
+ 
+
+### What DTO Means (and why we're skipping it)
+
+ 
+
+**DTO = Data Transfer Object**
+
+ 
+
+A DTO is a simple struct that represents data coming from or going to an API. It bridges the gap between:
+
+- Core Data entities (your app's internal format)
+
+- API JSON responses (external format)
+
+ 
+
+**Example workflow with DTOs:**
+
+```
+
+API returns JSON → Decode to DTO → Convert to Core Data Entity → Save to database
+
+```
+
+ 
+
+**Why we're NOT using DTOs in MVP:**
+
+- We're using bundled JSON files, not an API
+
+- We can decode JSON directly into simple structs or Core Data entities
+
+- When we add API later (Phase 2), we can add DTOs then
+
+- Don't build infrastructure for problems we don't have yet
+
+ 
+
+**Future use:** When Supabase/API integration happens, we'll add `Models/DTOs/` folder with:
+
+- `OfferDTO.swift` - Maps to API JSON structure for offers
+
+- `BankInstitutionDTO.swift` - Maps to API JSON structure for banks
+
+ 
+
+---
+
+ 
+
+## File Structure & Organization
+
+ 
+
+### Design Principle: Modular with Minimal Dependencies
+
+ 
+
+**Goal:** Each file should be understandable with minimal context from other files. This enables:
+
+- AI agents to debug specific files with limited context (2-3 files max)
+
+- Easier "vibe coding" where you work on one area without loading full codebase into your head
+
+- Clear boundaries between concerns
+
+ 
+
+**How we achieve this:**
+
+- Services are pure functions (no state, minimal imports)
+
+- Views are self-contained (fetch their own data, render, done)
+
+- Shared components are "dumb" (take data, display it, no business logic)
+
+- Core Data is the unavoidable dependency hub (it's the database - everything needs it)
+
+ 
+
+### MVP File Structure (Phase 1)
+
+ 
+
+```
+
+Churn/
+
+├── ChurnApp.swift                           // App entry point, inject ChurningStore
+
+├── Info.plist
+
+├── Assets.xcassets/
+
+│   ├── AppIcon.appiconset/
+
+│   ├── AccentColor.colorset/
+
+│   └── Colors/
+
+│       ├── PrimaryBlue.colorset/            // Deep blue for trust/financial
+
+│       ├── SuccessGreen.colorset/           // Green for earnings/success
+
+│       └── WarningOrange.colorset/          // Orange for reminders/warnings
+
+│
+
+├── Models/
+
+│   ├── ChurnDataModel.xcdatamodeld          // Core Data schema (entities defined here)
+
+│   ├── PersistenceController.swift          // Core Data stack + CloudKit configuration
+
+│   └── Enums.swift                          // All enums in one file for MVP simplicity
+
+│                                            // Contains: AccountStatus, AccountType, BonusStructure,
+
+│                                            // ReminderType, PayScheduleType, EligibilityPeriod
+
+│
+
+├── Views/
+
+│   ├── ContentView.swift                    // Main tab container (holds 5 tabs)
+
+│   │
+
+│   ├── HomeView.swift                       // Dashboard: carousel + active promotions + preview
+
+│   ├── AccountDetailView.swift              // Tap account card to see full details + all DDs
+
+│   ├── AddAccountView.swift                 // Form to create new account
+
+│   │
+
+│   ├── AccountsListView.swift               // All accounts (with search/filter - Phase 2)
+
+│   │
+
+│   ├── CalendarView.swift                   // Full Gantt chart of direct deposits (stub initially)
+
+│   │
+
+│   ├── OffersView.swift                     // Browse offers loaded from bundled JSON
+
+│   │
+
+│   ├── SettingsView.swift                   // Hub for person setup, about, terms, best practices
+
+│   ├── PersonSetupView.swift                // Configure Person 1/2 paycheck details
+
+│   │
+
+│   ├── PaywallView.swift                    // Subscription paywall (7-day trial)
+
+│   │
+
+│   └── Components/
+
+│       ├── AccountCard.swift                // Reusable account card for lists
+
+│       ├── EarningsCarousel.swift           // Top carousel showing 3 dollar metrics
+
+│       └── DatePickerSheet.swift            // Reusable date picker (used by many views)
+
+│
+
+├── Services/
+
+│   ├── CalculationService.swift             // Pure functions: YTD, tax, eligibility math
+
+│   │                                        // NO state, minimal imports - just math
+
+│   └── NotificationService.swift            // Schedule/manage local notifications for reminders
+
+│
+
+├── Store/
+
+│   └── ChurningStore.swift                  // @Observable store for shared calculations
+
+│                                            // Provides: YTD earnings, pending bonuses, all-time total
+
+│                                            // Future: Recommendation logic, complex state
+
+│
+
+├── Utilities/
+
+│   ├── Extensions.swift                     // Date, Decimal, View, Color extensions
+
+│   └── Constants.swift                      // App-wide constants (colors, strings, defaults)
+
+│
+
+├── Resources/
+
+│   └── offers.json                          // Bundled offer data (50 current offers)
+
+│
+
+└── SubscriptionManager.swift                // StoreKit 2 handling for IAP
+
+```
+
+ 
+
+**Total: ~20 files for MVP**
+
+ 
+
+### File Dependency Map (MVP)
+
+ 
+
+Understanding which files depend on which others:
+
+ 
+
+**Core Data (Hub):**
+
+- `ChurnDataModel.xcdatamodeld` - Defines entities
+
+- `PersistenceController.swift` - Sets up database
+
+- **Used by:** Almost everything (it's the database)
+
+ 
+
+**Services (Pure Functions - Minimal Dependencies):**
+
+- `CalculationService.swift`
+
+  - Imports: Foundation only
+
+  - Takes: Account objects (from Core Data)
+
+  - Returns: Calculated values (Decimals, Dates, Bools)
+
+  - **Used by:** ChurningStore, Views that need calculations
+
+  
+
+- `NotificationService.swift`
+
+  - Imports: Foundation, UserNotifications
+
+  - Takes: Reminder objects, dates
+
+  - Returns: Nothing (schedules notifications)
+
+  - **Used by:** Views that create/update reminders
+
+ 
+
+**Store (Centralized Calculations):**
+
+- `ChurningStore.swift`
+
+  - Imports: Core Data, Foundation
+
+  - Uses: CalculationService, PersistenceController
+
+  - **Used by:** Views via `@Environment`
+
+ 
+
+**Views (Self-Contained):**
+
+- Each view imports: SwiftUI, Core Data
+
+- Each view uses: `@FetchRequest` for data, ChurningStore for calculations
+
+- Components (like AccountCard) import: SwiftUI only, take data as parameters
+
+ 
+
+**Example: Debugging with AI**
+
+- Bug in YTD calculation: "Look at CalculationService.swift and ChurningStore.swift" (2 files)
+
+- Bug in account display: "Look at HomeView.swift, AccountCard.swift, and Core Data schema" (3 files)
+
+- Bug in notifications: "Look at NotificationService.swift" (1 file)
+
+ 
+
+### Why This Structure Works
+
+ 
+
+**For AI Agents:**
+
+- Most debugging requires context of 1-3 files maximum
+
+- Pure functions in services can be understood in isolation
+
+- Views follow predictable SwiftUI patterns
+
+ 
+
+**For Humans:**
+
+- Logical grouping (all views in Views/, all services in Services/)
+
+- Clear naming (CalculationService does calculations, NotificationService handles notifications)
+
+- Flat structure (no deep nesting in MVP)
+
+ 
+
+**For Future Growth:**
+
+- Easy to add subfolders when files multiply (Views/Home/, Views/Accounts/)
+
+- Easy to add new services without touching existing ones
+
+- Easy to add API layer (just add Services/API/ folder)
+
+ 
+
+---
+
+ 
+
+## Implementation Phases
+
+ 
+
+### Phase 1: MVP (Weeks 1-8)
+
+ 
+
+**Goal:** Launch with core manual data entry and basic visualization.
+
+ 
+
+**Features:**
+
+- ✅ Manual account entry (all fields from Core Data schema)
+
+- ✅ Dashboard with earnings carousel (YTD, pending, all-time)
+
+- ✅ Active promotions list
+
+- ✅ Account detail view
+
+- ✅ Basic reminders (check bonus, close account)
+
+- ✅ Person 1/2 paycheck configuration
+
+- ✅ CloudKit sync (cross-device)
+
+- ✅ Subscription paywall (7-day trial, $4.99/month or $49.99/year)
+
+- ✅ Bundled offers JSON (50 current offers, manually curated)
+
+ 
+
+**What's NOT in MVP:**
+
+- ❌ Gantt chart visualization (stub only)
+
+- ❌ Search/filter on accounts list
+
+- ❌ Offer database/API
+
+- ❌ DD allocation optimizer/recommendations
+
+- ❌ Best practices content
+
+- ❌ User sharing between couples
+
+- ❌ Advanced reminder types
+
+ 
+
+**Rationale:**
+
+- Focus on core job-to-be-done: "Track my accounts so I don't mess up"
+
+- Provides immediate value to early adopters
+
+- Validates willingness to pay before investing in advanced features
+
+- Can be built in 6-8 weeks part-time
+
+- Everything else can be added based on user feedback
+
+ 
+
+**Success Metrics:**
+
+- 20+ paying users in first month = real interest
+
+- 4.0+ App Store rating
+
+- Beta tester feedback is positive
+
+- Users actually track multiple accounts (not just testing)
+
+ 
+
+### Phase 2: Enhanced Visualization & Intelligence (Months 3-6)
+
+ 
+
+**Triggers to move to Phase 2:**
+
+- 50+ paying users (validation of demand)
+
+- Users specifically request these features
+
+- MRR covers development time
+
+ 
+
+**Features to Add:**
+
+- ✅ Full Gantt chart implementation in Calendar view
+
+- ✅ Search bar for accounts
+
+- ✅ Filter options (by bank, by status, by person)
+
+- ✅ Supabase backend for offers database
+
+  - Daily sync to app
+
+  - User can submit new offers
+
+  - Moderation queue for submissions
+
+- ✅ Basic recommendation: "You're eligible to reopen Chase now"
+
+- ✅ Best practices/tips content section
+
+- ✅ "Default bank" feature (send remainder of paycheck here)
+
+ 
+
+**Architectural Changes:**
+
+- Add `Services/API/` folder with API client
+
+- Add offer submission and moderation views
+
+- Expand ChurningStore if needed for recommendation logic
+
+- Add caching layer for offer data
+
+ 
+
+**Rationale:**
+
+- These features improve experience but aren't critical for core value
+
+- Offer database creates network effects (users help each other)
+
+- Recommendations increase value and stickiness
+
+- Only invest time if users are paying and engaged
+
+ 
+
+### Phase 3: Advanced Optimization & Sharing (Months 6-12)
+
+ 
+
+**Triggers to move to Phase 3:**
+
+- 200+ paying users
+
+- Users requesting advanced features
+
+- Revenue supports part-time development
+
+ 
+
+**Features to Add:**
+
+- ✅ Smart DD allocation algorithm
+
+  - Suggests optimal paycheck split based on requirements
+
+  - Warns about concurrent DD limits
+
+  - Optimizes for fastest requirement completion
+
+- ✅ Modify instance of DD (push future DDs back, with warnings)
+
+- ✅ User sharing for couples
+
+  - Backend integration (Supabase or custom)
+
+  - Real-time sync between partners
+
+  - Conflict resolution
+
+- ✅ Advanced reminders
+
+  - "Switch DD allocation on [date]"
+
+  - "Inactive for 60 days, here's a $300 offer"
+
+  - Customizable reminder templates
+
+- ✅ Tax export (CSV for accountant)
+
+- ✅ Analytics dashboard for personal stats
+
+ 
+
+**Architectural Changes:**
+
+- Expand ChurningStore to full state management (if sharing implemented)
+
+- Add backend for user pairing/sharing
+
+- Add complex algorithms (DirectDepositOptimizer service)
+
+- Potential need for background processing
+
+ 
+
+**Rationale:**
+
+- These features are "nice to have" but not essential
+
+- Sharing requires backend investment (cost + maintenance)
+
+- Algorithm development is time-intensive
+
+- Only justified if business is sustainable
+
+ 
+
+### Phase 4: Expansion & Monetization (Year 2+)
+
+ 
+
+**Triggers:**
+
+- 500+ paying users
+
+- Clear product-market fit
+
+- Looking to increase revenue per user
+
+ 
+
+**Features to Consider:**
+
+- Credit card churning integration
+
+- Affiliate links (earn commission on referrals)
+
+- Bank partnerships (featured offers)
+
+- Web version (requires separate backend)
+
+- Android version
+
+- API for third-party integrations
+
+- Community features (forums, offer ratings)
+
+ 
+
+**Rationale:**
+
+- These are significant pivots or expansions
+
+- Require dedicated time and potentially full-time focus
+
+- Should only pursue if core business is thriving
+
+ 
+
+---
+
+ 
+
+## Feature Planning & Future Roadmap
+
+ 
+
+### Features Wishlist (Beyond MVP)
+
+ 
+
+These features were discussed and explicitly deferred to post-MVP phases.
+
+ 
+
+#### Search & Filter (Phase 2)
+
+- **Feature:** Search bar for finding previous bank accounts
+
+- **Use Case:** User has 20+ closed accounts, needs to find "Did I open Chase in 2023?"
+
+- **Implementation:** Standard iOS search bar on AccountsListView
+
+- **Dependencies:** None (just UI work)
+
+ 
+
+#### Recommendation Algorithm (Phase 2/3)
+
+- **Feature:** Algorithm suggests what account to open next
+
+- **Factors:** Eligibility windows, current workload, offer value, user's DD capacity
+
+- **Use Case:** "You have bandwidth for one more account. Here are your top 3 options."
+
+- **Implementation:** RecommendationService in Services/ folder
+
+- **Dependencies:** Complete offer database, user's DD configuration
+
+ 
+
+#### Smart Defaults (Phase 2)
+
+- **Feature:** When adding account, auto-suggest DD allocation based on requirements
+
+- **Use Case:** Account needs 3 months of $500 DD. App suggests Person 1's next 6 paychecks at $250 each.
+
+- **Implementation:** Logic in AddAccountView, uses Person configuration
+
+- **Dependencies:** Person paycheck configuration must be complete
+
+ 
+
+#### Active Promotion Details (Phase 1 - MVP)
+
+- **Feature:** Clicking account card shows all pay dates and amounts for that promotion
+
+- **Implementation:** AccountDetailView with list of scheduled/completed DDs
+
+- **Dependencies:** Core Data relationship between Account and Direct Deposits (may need new entity)
+
+ 
+
+#### Best Practices / Tips Section (Phase 2)
+
+- **Feature:** Educational content on churning best practices
+
+- **Content Examples:**
+
+  - How to close bank accounts (call vs. online, what to say)
+
+  - Use different username when reopening account at same bank
+
+  - When to switch DD allocations (avoid mid-statement period)
+
+  - How to handle 1099-INT tax forms
+
+  - What counts as "direct deposit" at different banks
+
+- **Implementation:** Static content in SettingsView or dedicated BestPracticesView
+
+- **Dependencies:** None (just content writing)
+
+ 
+
+#### Default Bank (Phase 2)
+
+- **Feature:** User designates a "home bank" where paycheck remainder goes
+
+- **Use Case:** Person earns $3000/check, allocates $1500 to churning, wants $1500 to go to their main checking automatically
+
+- **Implementation:** Add defaultBank field to Person configuration
+
+- **Dependencies:** Person setup must be complete
+
+ 
+
+#### Reminder System (Phase 1 MVP + Phase 2 Expansions)
+
+- **MVP Reminders:**
+
+  - Check if bonus posted (around expected date)
+
+  - Close account before monthly fee
+
+  - Custom reminders
+
+- **Phase 2 Reminders:**
+
+  - Switch DD allocation on specific date
+
+  - "You've been inactive for 60 days, here's an easy $300 offer"
+
+  - First DD to new bank (verify it shows as DD, not regular deposit)
+
+- **Implementation:** NotificationService + ReminderType enum
+
+- **Dependencies:** UNUserNotificationCenter permissions
+
+ 
+
+#### Couple Sharing (Phase 3)
+
+- **Feature:** Two users can share the same account database
+
+- **Use Cases:**
+
+  - Married couples tracking jointly
+
+  - Both see updates in real-time
+
+  - Both can add/edit accounts
+
+- **Implementation Options:**
+
+  - Option A: CloudKit shared zone (Apple's native solution, simpler)
+
+  - Option B: Supabase backend with user pairing (more control, more work)
+
+- **Dependencies:** Backend infrastructure, conflict resolution logic, expanded ChurningStore
+
+- **Complexity:** High - requires backend, authentication, real-time sync
+
+ 
+
+#### Modify Direct Deposit Instance (Phase 3)
+
+- **Feature:** User can push future DDs back if plans change
+
+- **Use Case:** "I need to delay my Chase DDs by 2 weeks because I'm between jobs"
+
+- **Implementation:** Edit view for DD schedule with date shifting
+
+- **Warning Logic:** If new dates cause requirements to not be met by expected bonus date, show warning
+
+- **Dependencies:** Full Gantt chart implementation, DD schedule entities
+
+ 
+
+#### Offer Verification System (Phase 2)
+
+- **Feature:** Users can mark offers as "verified" or "expired"
+
+- **Use Case:** Crowdsource offer accuracy, keep database current
+
+- **Implementation:** Offer detail view with verification buttons, moderation queue
+
+- **Dependencies:** Backend (Supabase), offer database
+
+ 
+
+---
+
+ 
+
+## Design Principles & Constraints
+
+ 
+
+### Architectural Principles
+
+ 
+
+#### 1. Modular with Minimal Dependencies
+
+- Each file should be understandable with minimal context
+
+- Services are pure functions (no state, testable in isolation)
+
+- Views are self-contained (fetch data, render, done)
+
+- Makes "vibe coding" with AI assistance feasible
+
+ 
+
+#### 2. Progressive Disclosure
+
+- Don't show everything at once
+
+- Home screen answers "How am I doing?" in 5 seconds
+
+- Details are one tap away
+
+- Example: Maintaining accounts collapsed by default
+
+ 
+
+#### 3. Status Over Structure
+
+- Users care about "what's happening now" more than historical records
+
+- Surface active items, hide completed ones
+
+- Prioritize by urgency (active promotions > maintaining accounts > closed accounts)
+
+ 
+
+#### 4. Actionable Information
+
+- Every view should make next action clear
+
+- "Update DD for Person 1's next paycheck" better than just showing data
+
+- Visual warnings before mistakes (violating concurrent DD limits, opening during ineligible period)
+
+ 
+
+#### 5. Build What You Need, When You Need It
+
+- Don't build infrastructure for problems you don't have
+
+- Start simple, add complexity only when validated by user demand
+
+- YAGNI (You Aren't Gonna Need It) is a feature, not a bug
+
+ 
+
+### Technical Constraints
+
+ 
+
+#### Platform
+
+- iOS only, native SwiftUI
+
+- Minimum iOS 16 (balances modern APIs with device coverage)
+
+- iPhone primary, iPad secondary (optimize for iPhone first)
+
+ 
+
+#### Backend Strategy
+
+- MVP: No backend, bundled JSON
+
+- Phase 2: Supabase for offer database (free tier sufficient for 500 users)
+
+- Phase 3: Backend for sharing if needed
+
+ 
+
+#### Storage
+
+- Core Data for local persistence
+
+- CloudKit for cross-device sync (user's private database)
+
+- User's personal data never leaves Apple ecosystem in MVP
+
+ 
+
+#### Dependencies
+
+- Minimize third-party dependencies
+
+- Use Apple frameworks when possible (StoreKit 2, UserNotifications, CloudKit)
+
+- SwiftUI native components preferred over custom
+
+ 
+
+### Design Aesthetic: Professional & Accessible
+
+ 
+
+**Color Palette:**
+
+- Primary: Deep blue or teal (#007AFF) - trust, financial, calming
+
+- Accent: Green (#34C759) - success, earnings, positive reinforcement
+
+- Secondary: Orange/amber (#FF9500) - warnings, reminders, attention needed
+
+- Background: System backgrounds (white/light gray) with full dark mode support
+
+ 
+
+**Typography:**
+
+- SF Pro (iOS system font) for consistency and readability
+
+- SF Pro Rounded for financial amounts (friendly but clear)
+
+- Strong weight hierarchy (Regular, Medium, Semibold)
+
+ 
+
+**Layout:**
+
+- Card-based for accounts (clear boundaries, tappable)
+
+- Generous spacing (not cramped, easy to scan)
+
+- Smart defaults (common fields prominent, advanced options hidden)
+
+- iOS native controls throughout
+
+ 
+
+**Iconography:**
+
+- SF Symbols throughout for consistency
+
+- Custom app icon: Circular arrows (churn motion) + dollar symbol
+
+ 
+
+**Visual Style:**
+
+- Modern iOS design language (not skeuomorphic, not overly minimal)
+
+- Subtle depth (light shadows, proper hierarchy)
+
+- Color used purposefully, not decoratively
+
+- Professional but not corporate/stuffy
+
+ 
+
+**Why "Professional & Accessible":**
+
+- Target users are financially sophisticated (managing real money)
+
+- Age 25-45 demographic appreciates polish without stuffiness
+
+- Paid app ($5/month) signals quality, design must match
+
+- More polished than spreadsheets, more serious than whimsical apps
+
+- Approachable enough for churning newcomers
+
+ 
+
+### User Experience Principles
+
+ 
+
+#### Glanceable
+
+- App should answer "Am I on track?" without any taps
+
+- Carousel shows key metrics immediately
+
+- Color coding provides instant status recognition
+
+ 
+
+#### Context-Aware
+
+- App understands couples (Person 1/2 configuration)
+
+- App understands multiple paychecks and frequencies
+
+- App understands concurrent DD limits
+
+- Not just a dumb list - intelligent about user's constraints
+
+ 
+
+#### Prevents Mistakes
+
+- Visual warnings before rule violations
+
+- Eligibility checks before allowing account creation during restriction period
+
+- Reminders prevent forgotten tasks (close account, check bonus)
+
+ 
+
+#### Celebrates Progress
+
+- Positive reinforcement when bonuses post
+
+- Growing totals in carousel feel rewarding
+
+- Success messages brief but encouraging
+
+ 
+
+---
+
+ 
+
+## Critical Decisions Summary
+
+ 
+
+### Decisions We Made (and Why)
+
+ 
+
+1. **ChurningStore: Hybrid Approach**
+
+   - Decision: Minimal store for shared calculations, views still use `@FetchRequest`
+
+   - Why: Balances simplicity with future scalability
+
+   - When to expand: API integration, user sharing, performance needs
+
+ 
+
+2. **No DTOs in MVP**
+
+   - Decision: Skip data transfer objects until we have an API
+
+   - Why: YAGNI - don't build for problems we don't have
+
+   - When to add: Phase 2 when Supabase integration happens
+
+ 
+
+3. **Simplified File Structure**
+
+   - Decision: ~20 files instead of 60+ for MVP
+
+   - Why: Don't over-engineer before validation
+
+   - When to expand: Organically as features added
+
+ 
+
+4. **Calendar View as Separate Tab**
+
+   - Decision: Not on home screen, gets dedicated view
+
+   - Why: Important but not urgent, would overwhelm home screen
+
+   - Implementation: Full vertical Gantt chart with paycheck details
+
+ 
+
+5. **No Toggle Between Views**
+
+   - Decision: Show both "active accounts" and "DD preview" on home screen simultaneously
+
+   - Why: Different mental models, users need both contexts
+
+   - Alternative rejected: Toggle would force users to choose
+
+ 
+
+6. **Professional & Accessible Design**
+
+   - Decision: Modern iOS aesthetic, not whimsical or overly corporate
+
+   - Why: Matches target demographic (25-45, financially savvy, iOS users)
+
+   - Justifies: $5/month price point through polish
+
+ 
+
+7. **MVP Feature Scope**
+
+   - Decision: Manual entry only, no Gantt chart, no recommendations
+
+   - Why: Validate core value prop (tracking) before advanced features
+
+   - Success metric: 50+ paying users in 3 months
+
+ 
+
+### Foundation Decisions (Don't Change Later)
+
+ 
+
+These decisions must be right from the start because they're painful to change:
+
+ 
+
+1. ✅ Core Data schema (already well-designed)
+
+2. ✅ Entity relationships (Account → Reminders, etc.)
+
+3. ✅ CloudKit sync setup
+
+4. ✅ Subscription logic (StoreKit 2)
+
+ 
+
+### Flexible Decisions (Easy to Change Later)
+
+ 
+
+These can be refactored without major pain:
+
+ 
+
+1. ✅ Where views get data (FetchRequest → Store)
+
+2. ✅ Calculation logic location (View → Service → Store)
+
+3. ✅ View structure (SwiftUI is highly refactorable)
+
+4. ✅ File organization (moving files between folders is trivial)
+
+ 
+
+---
+
+ 
+
+## Next Steps for Implementation
+
+ 
+
+### Immediate (Week 1)
+
+1. Set up Xcode project with file structure above
+
+2. Define Core Data schema in `ChurnDataModel.xcdatamodeld`
+
+3. Implement `PersistenceController.swift` with CloudKit configuration
+
+4. Create `Enums.swift` with all enumeration types
+
+5. Set up `ChurningStore.swift` skeleton
+
+ 
+
+### Week 2-3
+
+6. Build `AddAccountView.swift` (form for creating accounts)
+
+7. Build `HomeView.swift` with earnings carousel
+
+8. Build `AccountCard.swift` component
+
+9. Build `AccountDetailView.swift`
+
+ 
+
+### Week 4-5
+
+10. Implement `CalculationService.swift` (all math logic)
+
+11. Build remaining tab views (stubbed)
+
+12. Implement `NotificationService.swift`
+
+13. Add basic reminders
+
+ 
+
+### Week 6-7
+
+14. Implement `SubscriptionManager.swift` and `PaywallView.swift`
+
+15. Build `SettingsView.swift` and `PersonSetupView.swift`
+
+16. Polish UI, add empty states
+
+17. TestFlight beta
+
+ 
+
+### Week 8
+
+18. Address beta feedback
+
+19. App Store submission
+
+20. Launch
+
+ 
+
+---
+
+ 
+
+## Document Metadata
+
+ 
+
+**Created:** Based on conversation on November 7, 2025  
+
+**Purpose:** Complete architectural and UI/UX specification for Churn iOS app  
+
+**Audience:** AI agents, future developers, founder reference  
+
+**Status:** Planning phase complete, ready for implementation  
+
+**Next Review:** After MVP launch (Week 8) to assess Phase 2 priorities
