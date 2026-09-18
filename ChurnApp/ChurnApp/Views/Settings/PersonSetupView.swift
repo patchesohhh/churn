@@ -35,6 +35,13 @@ struct PersonSetupView: View {
 
     @State private var didAttemptSave = false
 
+    /// After a *new* person is saved, offer the natural next step —
+    /// setting up their first paycheck — instead of just dismissing.
+    /// Round 2: "onboarding entry point" per CLAUDE.md. Editing an existing
+    /// person never triggers this; there's nothing "next" about an edit.
+    @State private var savedPerson: Person?
+    @State private var isPresentingAddPaycheck = false
+
     private var isEditing: Bool { person != nil }
 
     /// Small, fixed palette of system color names for telling the two
@@ -70,6 +77,31 @@ struct PersonSetupView: View {
             }
         }
         .onAppear(perform: populateFromExistingPerson)
+        // Lightweight confirmation step after a *new* person is saved — not
+        // a multi-step wizard, just one extra prompt pointing at the
+        // natural next action.
+        .confirmationDialog(
+            "Paycheck Info Saved",
+            isPresented: Binding(
+                get: { savedPerson != nil },
+                set: { if !$0 { savedPerson = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Set Up First Paycheck") {
+                isPresentingAddPaycheck = true
+            }
+            Button("Later", role: .cancel) {
+                dismiss()
+            }
+        } message: {
+            Text("Want to set up \(savedPerson?.name ?? "their") first paycheck now?")
+        }
+        .sheet(isPresented: $isPresentingAddPaycheck, onDismiss: { dismiss() }) {
+            if let savedPerson {
+                AddEditPaycheckView(person: savedPerson, paycheck: nil)
+            }
+        }
     }
 
     // MARK: - Sections
@@ -200,9 +232,10 @@ struct PersonSetupView: View {
         didAttemptSave = true
         guard isValid, let amount = paycheckAmountDecimal else { return }
 
+        let isNewPerson = person == nil
         let target = person ?? Person(context: viewContext)
         let now = Date()
-        if person == nil {
+        if isNewPerson {
             target.id = UUID()
             target.createdAt = now
         }
@@ -219,7 +252,13 @@ struct PersonSetupView: View {
 
         do {
             try viewContext.save()
-            dismiss()
+            if isNewPerson {
+                // Prompt toward the next step instead of dismissing
+                // immediately — see the `.confirmationDialog` in `body`.
+                savedPerson = target
+            } else {
+                dismiss()
+            }
         } catch {
             assertionFailure("Failed to save person: \(error)")
         }

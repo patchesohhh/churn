@@ -24,6 +24,10 @@ struct AddEditOfferView: View {
     // MARK: - Form state
 
     @State private var bankName: String = ""
+    /// The `Bank` row `bankName` resolves to, kept in sync by `BankPicker`.
+    /// Additive per CLAUDE.md round 2 — `bankName` stays the source of truth
+    /// every existing view reads.
+    @State private var selectedBank: Bank?
     @State private var offerTitle: String = ""
     @State private var bonusAmountText: String = ""
     @State private var requirements: String = ""
@@ -90,10 +94,7 @@ struct AddEditOfferView: View {
         NavigationStack {
             Form {
                 Section("Offer") {
-                    TextField("Bank Name", text: $bankName)
-                        #if os(iOS)
-                        .textInputAutocapitalization(.words)
-                        #endif
+                    BankPicker(selectedBank: $selectedBank, bankNameText: $bankName)
                     TextField("Offer Title", text: $offerTitle)
                         #if os(iOS)
                         .textInputAutocapitalization(.words)
@@ -205,6 +206,7 @@ struct AddEditOfferView: View {
         guard let offer else { return }
 
         bankName = offer.bankName
+        selectedBank = offer.bank
         offerTitle = offer.offerTitle
         bonusAmountText = Self.decimalFormatter.string(from: offer.bonusAmountDecimal as NSDecimalNumber) ?? ""
         requirements = offer.requirements
@@ -270,6 +272,7 @@ struct AddEditOfferView: View {
         }
 
         targetOffer.bankName = trimmedBank
+        targetOffer.bank = selectedBank
         targetOffer.offerTitle = trimmedTitle
         targetOffer.bonusAmountDecimal = bonusAmount
         targetOffer.requirements = requirements.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -3,9 +3,13 @@
 //  ChurnApp
 //
 //  The Home tab: a dashboard that answers "how am I doing, and what needs
-//  attention right now" in a single scroll. Built directly from the "Home
-//  Screen Layout" spec in `docs/project notes/UI Summary (initial).txt`,
-//  simplified per CLAUDE.md's condensed version.
+//  attention right now" in a single scroll. Built from the "Home Screen
+//  Layout" spec in `docs/project notes/UI Summary (initial).txt`, then
+//  reworked in round 2 per CLAUDE.md: this app is a paycheck-routing app
+//  first, bonus-tracker second, so the earnings carousel now *always*
+//  renders (even at $0) instead of being hidden behind a full-screen "add a
+//  bank account" empty state on first launch — that used to make the app
+//  read as being about bank data instead of money coming in.
 //
 //  Per CLAUDE.md's hybrid architecture, this view fetches its own data via
 //  `@FetchRequest` and feeds plain arrays into `CalculationService` directly
@@ -31,19 +35,31 @@ struct HomeView: View {
     )
     private var accounts: FetchedResults<Account>
 
-    /// Only *scheduled* (not yet posted/skipped) deposits, soonest first —
-    /// exactly what the "Next Paychecks" preview needs, across both people.
+    /// Every `Person` — used only to detect first-run ("no one has set up an
+    /// income profile yet") and to resolve who "Add Paycheck" should target.
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Person.createdAt, ascending: true)])
+    private var people: FetchedResults<Person>
+
+    /// Upcoming paychecks (today or later), soonest first — round 2 moves
+    /// this section from raw `DirectDeposit` rows to `Paycheck`, since a
+    /// paycheck (with its computed allocation status) is the thing the user
+    /// actually thinks in terms of now.
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \DirectDeposit.scheduledDate, ascending: true)],
-        predicate: NSPredicate(format: "status == %@", DirectDepositStatus.scheduled.rawValue)
+        sortDescriptors: [NSSortDescriptor(keyPath: \Paycheck.payDate, ascending: true)],
+        predicate: NSPredicate(format: "payDate >= %@", Calendar.current.startOfDay(for: Date()) as NSDate)
     )
-    private var upcomingDeposits: FetchedResults<DirectDeposit>
+    private var upcomingPaychecks: FetchedResults<Paycheck>
 
     @Environment(\.managedObjectContext) private var viewContext
 
     @State private var isPresentingAddAccount = false
+    @State private var isPresentingPersonSetup = false
+    @State private var addPaycheckTarget: Person?
+    @State private var isChoosingPaycheckPerson = false
 
     // MARK: - Derived data
+
+    private var isFirstRun: Bool { people.isEmpty }
 
     private var activePromotions: [Account] {
         accounts.filter {
@@ -56,42 +72,35 @@ struct HomeView: View {
         accounts.filter { $0.accountStatusValue == .maintaining }
     }
 
-    private var nextPaychecks: [DirectDeposit] {
-        Array(upcomingDeposits.prefix(3))
+    private var nextPaychecks: [Paycheck] {
+        Array(upcomingPaychecks.prefix(3))
     }
 
     var body: some View {
         NavigationStack {
-            Group {
-                if accounts.isEmpty {
-                    EmptyStateView(
-                        systemImageName: "banknote",
-                        title: "No Accounts Yet",
-                        message: "Add a bank account to start tracking a bonus.",
-                        actionTitle: "Add Account"
-                    ) {
-                        isPresentingAddAccount = true
+            ScrollView {
+                VStack(alignment: .leading, spacing: 28) {
+                    // Always at the top, always rendered — never hidden
+                    // behind a full-screen empty state. See CLAUDE.md round 2.
+                    earningsCarousel
+
+                    if isFirstRun {
+                        firstRunCallToAction
                     }
-                } else {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 28) {
-                            earningsCarousel
 
-                            if !activePromotions.isEmpty {
-                                activePromotionsSection
-                            }
+                    if !activePromotions.isEmpty {
+                        activePromotionsSection
+                    } else if !isFirstRun {
+                        activePromotionsEmptySection
+                    }
 
-                            if !nextPaychecks.isEmpty {
-                                nextPaychecksSection
-                            }
+                    nextPaychecksSection
 
-                            if !maintainingAccounts.isEmpty {
-                                maintainingSection
-                            }
-                        }
-                        .padding(.vertical, 16)
+                    if !maintainingAccounts.isEmpty {
+                        maintainingSection
                     }
                 }
+                .padding(.vertical, 16)
             }
             .navigationTitle("Home")
             .toolbar {
@@ -102,8 +111,30 @@ struct HomeView: View {
             .navigationDestination(for: Account.self) { account in
                 AccountDetailView(account: account)
             }
+            .navigationDestination(for: Paycheck.self) { paycheck in
+                PaycheckDetailView(paycheck: paycheck)
+            }
             .sheet(isPresented: $isPresentingAddAccount) {
                 AddEditAccountView(account: nil)
+            }
+            .sheet(isPresented: $isPresentingPersonSetup) {
+                NavigationStack {
+                    PersonSetupView(person: nil)
+                }
+            }
+            .sheet(item: $addPaycheckTarget) { person in
+                AddEditPaycheckView(person: person, paycheck: nil)
+            }
+            .confirmationDialog(
+                "Add Paycheck For",
+                isPresented: $isChoosingPaycheckPerson,
+                titleVisibility: .visible
+            ) {
+                ForEach(people, id: \.id) { person in
+                    Button(person.name) {
+                        addPaycheckTarget = person
+                    }
+                }
             }
         }
     }
@@ -113,7 +144,9 @@ struct HomeView: View {
     /// Swipeable page-style carousel of the three headline money metrics, per
     /// the source doc's "Earnings Carousel (Top)" spec. `TabView(.page)`
     /// reads closer to the original intent than a static HStack, and is
-    /// still fully native.
+    /// still fully native. Renders unconditionally — including at $0 with no
+    /// data at all — so the first thing a brand-new user sees is "here's
+    /// where your money shows up", not a wall about bank accounts.
     private var earningsCarousel: some View {
         TabView {
             StatCard(
@@ -147,6 +180,41 @@ struct HomeView: View {
         .frame(height: 150)
     }
 
+    // MARK: - First-run call to action
+
+    /// Shown only when no `Person` exists yet at all. Framed around income
+    /// ("set up your paycheck"), not bank accounts — opening a bank account
+    /// is a downstream step of routing a paycheck, not the entry point.
+    /// Deliberately a card within the scroll, not a full-screen takeover, so
+    /// the earnings carousel above it stays visible.
+    private var firstRunCallToAction: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: "banknote.fill")
+                    .font(.system(size: 28))
+                    .foregroundStyle(.green)
+                    .frame(width: 44, height: 44)
+                    .background(.green.opacity(0.15), in: Circle())
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Set Up Your Paycheck")
+                        .font(.headline)
+                    Text("Add your income profile to start routing paychecks to bonus accounts.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Button("Add Paycheck") {
+                isPresentingPersonSetup = true
+            }
+            .buttonStyle(.primary)
+        }
+        .padding(16)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padding(.horizontal)
+    }
+
     // MARK: - 2. Active promotions
 
     /// Accounts still working toward a bonus that hasn't posted — the "needs
@@ -174,13 +242,31 @@ struct HomeView: View {
         }
     }
 
+    /// Small, inline empty state for Active Promotions — not a full-screen
+    /// takeover. Only shown once the user is past first-run (there's already
+    /// a bigger CTA for that case).
+    private var activePromotionsEmptySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeaderView(title: "Active Promotions")
+                .padding(.horizontal)
+
+            Text("No active promotions.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal)
+        }
+    }
+
     // MARK: - 3. Next paychecks mini-preview
 
+    /// Round 2: `Paycheck`-based rather than raw `DirectDeposit`-based —
+    /// shows date, person, total, and allocation status via
+    /// `unallocatedAmountDecimal` rather than a single deposit row.
     private var nextPaychecksSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeaderView(
                 title: "Next Paychecks",
-                actionTitle: "View full schedule"
+                actionTitle: nextPaychecks.isEmpty ? nil : "View full schedule"
             ) {
                 // TODO: navigate to the Calendar tab once it's wired up by
                 // the concurrently-built Calendar feature / tab-bar
@@ -188,12 +274,22 @@ struct HomeView: View {
             }
             .padding(.horizontal)
 
-            VStack(spacing: 8) {
-                ForEach(nextPaychecks, id: \.id) { deposit in
-                    NextPaycheckRow(deposit: deposit)
+            if nextPaychecks.isEmpty {
+                Text("No paychecks scheduled.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal)
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(nextPaychecks, id: \.id) { paycheck in
+                        NavigationLink(value: paycheck) {
+                            NextPaycheckRow(paycheck: paycheck)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
         }
     }
 
@@ -234,6 +330,12 @@ struct HomeView: View {
             }
 
             Button {
+                startAddPaycheckFlow()
+            } label: {
+                Label("Add Paycheck", systemImage: "banknote")
+            }
+
+            Button {
                 // TODO: wire once a "log bonus received" flow exists —
                 // likely just editing an account's actualBonusDate. Out of
                 // scope for this pass; Accounts feature owns that form.
@@ -251,51 +353,74 @@ struct HomeView: View {
             Label("Quick Actions", systemImage: "plus")
         }
     }
+
+    /// "Add Paycheck" needs an income profile (`Person`) to exist first,
+    /// since a `Paycheck` requires one. No people yet → send the user to
+    /// `PersonSetupView` instead. One person → target them directly. Two
+    /// (or more) → ask which one via a confirmation dialog rather than
+    /// guessing.
+    private func startAddPaycheckFlow() {
+        if let onlyPerson = people.count == 1 ? people.first : nil {
+            addPaycheckTarget = onlyPerson
+        } else if people.isEmpty {
+            isPresentingPersonSetup = true
+        } else {
+            isChoosingPaycheckPerson = true
+        }
+    }
 }
 
 // MARK: - Next paycheck row
 
-/// One row in the Next Paychecks preview: date, amount, and which
-/// account/bank the deposit is routed to.
+/// One row in the Next Paychecks preview: date, person, total, and whether
+/// the paycheck is fully or partially allocated across accounts.
 private struct NextPaycheckRow: View {
 
-    let deposit: DirectDeposit
+    let paycheck: Paycheck
+
+    private var isFullyAllocated: Bool {
+        paycheck.unallocatedAmountDecimal <= 0
+    }
 
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(deposit.account?.bankName ?? "Unassigned")
+                Text(paycheck.person.name)
                     .font(.subheadline.weight(.semibold))
-                if let personName = deposit.person?.name {
-                    Text(personName)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
+                Text(paycheck.payDate.formatted(date: .abbreviated, time: .omitted))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
 
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                MoneyText(amount: deposit.amountDecimal, size: .small)
-                Text(deposit.scheduledDate.formatted(date: .abbreviated, time: .omitted))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-
-            // Visual indicator that this DD series is about to complete —
-            // last deposit in its account's series, per the source doc's
-            // "visual indicator if a DD series is about to complete" note.
-            if let account = deposit.account {
-                let progress = CalculationService.directDepositProgress(for: account)
-                if progress.total > 0 && progress.completed == progress.total - 1 {
-                    Image(systemName: "flag.checkered.circle.fill")
-                        .foregroundStyle(.green)
-                        .accessibilityLabel("Final deposit in this series")
-                }
+                MoneyText(amount: paycheck.totalAmountDecimal, size: .small)
+                allocationBadge
             }
         }
         .padding(12)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    /// "Fully allocated" / "Partially allocated" status derived from
+    /// `unallocatedAmountDecimal` — round 2's computed-remainder model, never
+    /// a stored flag. A negative remainder (over-allocated) is flagged red
+    /// rather than treated the same as "fully allocated".
+    private var allocationBadge: some View {
+        Group {
+            if paycheck.unallocatedAmountDecimal < 0 {
+                Text("Over-allocated")
+                    .foregroundStyle(.red)
+            } else if isFullyAllocated {
+                Text("Fully allocated")
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("Partially allocated")
+                    .foregroundStyle(.orange)
+            }
+        }
+        .font(.caption2)
     }
 }
 
@@ -367,9 +492,26 @@ private struct GenericStatCardDaysLabel: View {
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }
 
-#Preview("Empty") {
+#Preview("First run (no Person)") {
     HomeView()
         .environment(\.managedObjectContext, PersistenceController(inMemory: true).container.viewContext)
+}
+
+#Preview("Person exists, no accounts/paychecks") {
+    let controller = PersistenceController(inMemory: true)
+    let context = controller.container.viewContext
+    let person = Person(context: context)
+    person.id = UUID()
+    person.name = "Alex"
+    person.payFrequency = PayFrequency.biweekly.rawValue
+    person.paycheckAmount = NSDecimalNumber(decimal: 2400)
+    person.maxConcurrentDirectDeposits = 2
+    person.createdAt = Date()
+    person.updatedAt = Date()
+    try? context.save()
+
+    return HomeView()
+        .environment(\.managedObjectContext, context)
 }
 
 #Preview("Dark mode") {

@@ -32,6 +32,10 @@ struct AddEditAccountView: View {
 
     @State private var selectedPersonID: NSManagedObjectID?
     @State private var bankName = ""
+    /// The `Bank` row `bankName` resolves to, kept in sync by `BankPicker`.
+    /// Additive per CLAUDE.md round 2 — `bankName` stays the source of truth
+    /// every existing view reads.
+    @State private var selectedBank: Bank?
     @State private var accountType: AccountType = .checking
     @State private var openingDate = Date()
     @State private var bonusAmountText = ""
@@ -43,6 +47,8 @@ struct AddEditAccountView: View {
     @State private var expectedBonusDate = Date()
     @State private var accountStatus: AccountStatus = .prospecting
     @State private var eligibilityMonths: Int16 = 12
+    @State private var accountNumberLast4 = ""
+    @State private var isHomeAccount = false
     @State private var notes = ""
 
     @State private var didAttemptSave = false
@@ -65,6 +71,7 @@ struct AddEditAccountView: View {
                 }
 
                 bankSection
+                accountDetailsSection
                 bonusSection
                 statusSection
                 notesSection
@@ -99,10 +106,7 @@ struct AddEditAccountView: View {
 
     private var bankSection: some View {
         Section("Bank") {
-            TextField("Bank Name", text: $bankName)
-                #if os(iOS)
-                .textInputAutocapitalization(.words)
-                #endif
+            BankPicker(selectedBank: $selectedBank, bankNameText: $bankName)
 
             if didAttemptSave && bankName.trimmingCharacters(in: .whitespaces).isEmpty {
                 Text("Bank name is required.")
@@ -118,6 +122,33 @@ struct AddEditAccountView: View {
             .pickerStyle(.segmented)
 
             DatePicker("Opening Date", selection: $openingDate, displayedComponents: .date)
+        }
+    }
+
+    /// Round 2: last-4 is promoted from a buried optional detail to its own
+    /// prominent field (what the user cross-references against their
+    /// paystub), and `isHomeAccount` marks a permanent routing destination.
+    /// No single-home-account constraint — multiple are allowed, so this
+    /// never validates against other accounts.
+    private var accountDetailsSection: some View {
+        Group {
+            Section {
+                TextField("Last 4 Digits", text: $accountNumberLast4)
+                    #if os(iOS)
+                    .keyboardType(.numberPad)
+                    #endif
+                    .onChange(of: accountNumberLast4) { _, newValue in
+                        accountNumberLast4 = String(newValue.filter(\.isNumber).prefix(4))
+                    }
+            } footer: {
+                Text("Matches the last 4 digits shown on your paystub — this app never stores full account numbers.")
+            }
+
+            Section {
+                Toggle("This Is a Home Account", isOn: $isHomeAccount)
+            } footer: {
+                Text("Everything else routes through this account. Multiple home accounts are allowed.")
+            }
         }
     }
 
@@ -234,6 +265,7 @@ struct AddEditAccountView: View {
 
         selectedPersonID = account.person?.objectID
         bankName = account.bankName
+        selectedBank = account.bank
         accountType = account.accountTypeValue
         openingDate = account.openingDate
         bonusAmountText = NSDecimalNumber(decimal: account.bonusAmountDecimal).stringValue
@@ -249,6 +281,8 @@ struct AddEditAccountView: View {
         }
         accountStatus = account.accountStatusValue
         eligibilityMonths = account.eligibilityMonths
+        accountNumberLast4 = account.accountNumberLast4 ?? ""
+        isHomeAccount = account.isHomeAccount
         notes = account.notes ?? ""
     }
 
@@ -267,6 +301,7 @@ struct AddEditAccountView: View {
 
         target.person = viewContext.object(with: selectedPersonID) as? Person
         target.bankName = bankName.trimmingCharacters(in: .whitespaces)
+        target.bank = selectedBank
         target.accountTypeValue = accountType
         target.openingDate = openingDate
         target.bonusAmountDecimal = amount
@@ -276,6 +311,8 @@ struct AddEditAccountView: View {
         target.expectedBonusDate = hasExpectedBonusDate ? expectedBonusDate : nil
         target.accountStatusValue = accountStatus
         target.eligibilityMonths = eligibilityMonths
+        target.accountNumberLast4 = accountNumberLast4.isEmpty ? nil : accountNumberLast4
+        target.isHomeAccount = isHomeAccount
         target.notes = notes.isEmpty ? nil : notes
         target.updatedAt = Date()
 

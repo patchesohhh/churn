@@ -1,0 +1,337 @@
+//
+//  PaycheckDetailView.swift
+//  ChurnApp
+//
+//  Detail screen for one Paycheck: date, total, its DirectDeposit splits,
+//  and the same live remainder line AddEditPaycheckView shows while
+//  editing. Pushed from CalendarView. Mirrors AccountDetailView's
+//  edit/delete menu pattern.
+//
+
+import CoreData
+import SwiftUI
+
+struct PaycheckDetailView: View {
+
+    @ObservedObject var paycheck: Paycheck
+
+    @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.dismiss) private var dismiss
+
+    /// To name where the remainder lands. See AddEditPaycheckView for the
+    /// same query/rationale — multiple home accounts are allowed, this just
+    /// names the first one found.
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Account.bankName, ascending: true)],
+        predicate: NSPredicate(format: "isHomeAccount == YES")
+    )
+    private var homeAccounts: FetchedResults<Account>
+
+    @State private var isPresentingEdit = false
+    @State private var isPresentingDeleteConfirm = false
+
+    var body: some View {
+        List {
+            headerSection
+            splitsSection
+            remainderSection
+        }
+        .navigationTitle("Paycheck")
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button {
+                        isPresentingEdit = true
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+
+                    Button(role: .destructive) {
+                        isPresentingDeleteConfirm = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+        }
+        .sheet(isPresented: $isPresentingEdit) {
+            AddEditPaycheckView(person: paycheck.person, paycheck: paycheck)
+        }
+        .confirmationDialog(
+            "Delete this paycheck?",
+            isPresented: $isPresentingDeleteConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                delete()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            // `Paycheck.directDeposits` is cascade — deleting a paycheck
+            // takes its split rows with it. Say so up front rather than
+            // let that be a surprise.
+            Text("This permanently removes the paycheck and all of its splits. This can't be undone.")
+        }
+    }
+
+    // MARK: - Sections
+
+    private var headerSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text(paycheck.payDate.formatted(date: .long, time: .omitted))
+                        .font(.title3.weight(.semibold))
+                    Spacer()
+                    allocationBadge
+                }
+
+                Label(paycheck.person.name, systemImage: "person.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                MoneyText(amount: paycheck.totalAmountDecimal, size: .large)
+            }
+            .padding(.vertical, 4)
+        }
+        .listRowSeparator(.hidden)
+    }
+
+    private var allocationBadge: some View {
+        let remainder = paycheck.unallocatedAmountDecimal
+        return GenericStatusBadge(
+            text: allocationText(for: remainder),
+            color: allocationColor(for: remainder),
+            systemImageName: allocationSymbolName(for: remainder)
+        )
+    }
+
+    private var splitsSection: some View {
+        Section("Splits") {
+            let splits = paycheck.directDepositsArray
+            if splits.isEmpty {
+                Text("No splits assigned yet — the full amount routes to the home account.")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(splits, id: \.id) { deposit in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(deposit.account?.bankName ?? "Unassigned Account")
+                            if let last4 = deposit.account?.accountNumberLast4, !last4.isEmpty {
+                                Text("••••\(last4)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 2) {
+                            MoneyText(amount: deposit.amountDecimal, size: .small)
+                            GenericStatusBadge(
+                                text: deposit.statusValue.displayName,
+                                color: depositStatusColor(deposit.statusValue)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Same live remainder presentation as AddEditPaycheckView — negative
+    /// (over-allocated) is deliberately never clamped, it's a warning state.
+    private var remainderSection: some View {
+        Section {
+            let remainder = paycheck.unallocatedAmountDecimal
+            if remainder < 0 {
+                Label {
+                    HStack(spacing: 4) {
+                        Text("Over-allocated by")
+                        MoneyText(amount: abs(remainder), size: .small, color: .red)
+                    }
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                }
+                .foregroundStyle(.red)
+            } else {
+                Label {
+                    HStack(spacing: 4) {
+                        Text("Unallocated:")
+                        MoneyText(amount: remainder, size: .small)
+                        Text(homeAccountDescription)
+                            .foregroundStyle(.secondary)
+                    }
+                } icon: {
+                    Image(systemName: "arrow.turn.down.right")
+                }
+            }
+        }
+    }
+
+    private var homeAccountDescription: String {
+        if let home = homeAccounts.first {
+            "→ \(home.bankName)"
+        } else {
+            "(no home account set)"
+        }
+    }
+
+    private func depositStatusColor(_ status: DirectDepositStatus) -> Color {
+        switch status {
+        case .scheduled: .blue
+        case .posted: .green
+        case .skipped: .gray
+        }
+    }
+
+    private func allocationText(for remainder: Decimal) -> String {
+        if remainder < 0 { "Over-Allocated" }
+        else if remainder == 0 { "Fully Allocated" }
+        else { "Partial" }
+    }
+
+    private func allocationColor(for remainder: Decimal) -> Color {
+        if remainder < 0 { .red }
+        else if remainder == 0 { .green }
+        else { .orange }
+    }
+
+    private func allocationSymbolName(for remainder: Decimal) -> String {
+        if remainder < 0 { "exclamationmark.triangle.fill" }
+        else if remainder == 0 { "checkmark.circle.fill" }
+        else { "circle.lefthalf.filled" }
+    }
+
+    // MARK: - Actions
+
+    private func delete() {
+        // Cascade: deleting the paycheck takes its DirectDeposit splits
+        // with it (Paycheck.directDeposits is the cascade side).
+        viewContext.delete(paycheck)
+        do {
+            try viewContext.save()
+            dismiss()
+        } catch {
+            assertionFailure("Failed to delete paycheck: \(error)")
+        }
+    }
+}
+
+// MARK: - Previews
+
+#Preview("Fully allocated") {
+    let context = PersistenceController.preview.container.viewContext
+    let paycheck = (try? context.fetch(Paycheck.fetchRequest()))?
+        .first { $0.unallocatedAmountDecimal == 0 }
+
+    return NavigationStack {
+        if let paycheck {
+            PaycheckDetailView(paycheck: paycheck)
+        } else {
+            Text("No sample paycheck found")
+        }
+    }
+    .environment(\.managedObjectContext, context)
+}
+
+#Preview("Partially allocated") {
+    let context = PersistenceController.preview.container.viewContext
+    let paycheck = (try? context.fetch(Paycheck.fetchRequest()))?
+        .first { $0.unallocatedAmountDecimal > 0 }
+
+    return NavigationStack {
+        if let paycheck {
+            PaycheckDetailView(paycheck: paycheck)
+        } else {
+            Text("No sample paycheck found")
+        }
+    }
+    .environment(\.managedObjectContext, context)
+}
+
+#Preview("Over-allocated warning state") {
+    // Unsaved, in-place fixture (same approach as
+    // AddEditPaycheckView's equivalent preview) — a $2,000 paycheck with a
+    // single $2,500 split.
+    let controller = PersistenceController(inMemory: true)
+    let context = controller.container.viewContext
+
+    let person = Person(context: context)
+    person.id = UUID()
+    person.name = "Sam"
+    person.payFrequency = PayFrequency.biweekly.rawValue
+    person.paycheckAmount = NSDecimalNumber(string: "2000.00")
+    person.maxConcurrentDirectDeposits = 3
+    person.createdAt = Date()
+    person.updatedAt = Date()
+
+    let paycheck = Paycheck(context: context)
+    paycheck.id = UUID()
+    paycheck.payDate = Date()
+    paycheck.totalAmount = NSDecimalNumber(string: "2000.00")
+    paycheck.createdAt = Date()
+    paycheck.updatedAt = Date()
+    paycheck.person = person
+
+    let account = Account(context: context)
+    account.id = UUID()
+    account.bankName = "SoFi"
+    account.accountType = AccountType.checking.rawValue
+    account.openingDate = Date()
+    account.bonusAmount = NSDecimalNumber(string: "300.00")
+    account.bonusStructure = BonusStructure.lumpSum.rawValue
+    account.bonusRequirements = ""
+    account.accountStatus = AccountStatus.open.rawValue
+    account.eligibilityMonths = 24
+    account.isArchived = false
+    account.createdAt = Date()
+    account.updatedAt = Date()
+    account.person = person
+
+    let deposit = DirectDeposit(context: context)
+    deposit.id = UUID()
+    deposit.scheduledDate = Date()
+    deposit.amount = NSDecimalNumber(string: "2500.00")
+    deposit.status = DirectDepositStatus.scheduled.rawValue
+    deposit.sequenceNumberInSeries = 1
+    deposit.isFirstToBank = true
+    deposit.createdAt = Date()
+    deposit.updatedAt = Date()
+    deposit.account = account
+    deposit.person = person
+    deposit.paycheck = paycheck
+
+    return NavigationStack {
+        PaycheckDetailView(paycheck: paycheck)
+    }
+    .environment(\.managedObjectContext, context)
+}
+
+#Preview("No home account set") {
+    let controller = PersistenceController(inMemory: true)
+    let context = controller.container.viewContext
+
+    let person = Person(context: context)
+    person.id = UUID()
+    person.name = "Taylor"
+    person.payFrequency = PayFrequency.monthly.rawValue
+    person.paycheckAmount = NSDecimalNumber(string: "3200.00")
+    person.maxConcurrentDirectDeposits = 2
+    person.createdAt = Date()
+    person.updatedAt = Date()
+
+    let paycheck = Paycheck(context: context)
+    paycheck.id = UUID()
+    paycheck.payDate = Date()
+    paycheck.totalAmount = NSDecimalNumber(string: "3200.00")
+    paycheck.createdAt = Date()
+    paycheck.updatedAt = Date()
+    paycheck.person = person
+
+    return NavigationStack {
+        PaycheckDetailView(paycheck: paycheck)
+    }
+    .environment(\.managedObjectContext, context)
+}
