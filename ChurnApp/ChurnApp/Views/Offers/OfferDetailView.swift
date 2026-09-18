@@ -25,7 +25,8 @@ struct OfferDetailView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(offer.bankName)
                         .font(.title3.weight(.semibold))
-                    Text(offer.offerTitle)
+                    // Optional title (round 3) — falls back to the bank name.
+                    Text(offer.displayTitle)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     MoneyText(amount: offer.bonusAmountDecimal, size: .large, color: .green)

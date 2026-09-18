@@ -15,11 +15,13 @@ import SwiftUI
 
 @main struct MyApp: App {
     let persistenceController = PersistenceController.shared
+    let tabSelection = AppTabSelection()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .environment(tabSelection)
         }
     }
 }

@@ -127,9 +127,9 @@ struct PersistenceController {
 /// shared `preview` singleton.
 enum SampleData {
 
-    /// Inserts two household earners, three banks, four accounts across every
-    /// status, a handful of direct deposits, two paychecks, three reminders and
-    /// two offers, then saves.
+    /// Inserts two household earners, three banks, five accounts (one per
+    /// status, plus a non-churn home account), a handful of direct deposits,
+    /// two paychecks, three reminders and two offers, then saves.
     @discardableResult
     static func populate(in context: NSManagedObjectContext) -> Bool {
         let now = Date()
@@ -312,6 +312,32 @@ enum SampleData {
         usBank.person = jordan
         usBank.offer = usBankOffer
 
+        // A plain home account with no promotion attached — round 3's whole
+        // reason for `isChurnAccount`. The bonus columns below are *not*
+        // meaningful data: they stay non-optional in the store (making them
+        // optional would have broken every round 1/2 accessor), so they get
+        // harmless placeholder values and `isChurnAccount = false` tells the UI
+        // to ignore them. This is the household's joint savings, the kind of
+        // account that existed long before any churning started.
+        let allySavings = Account(context: context)
+        allySavings.id = UUID()
+        allySavings.bankName = "Ally"
+        allySavings.accountType = AccountType.savings.rawValue
+        allySavings.openingDate = date(daysFromNow: -900)
+        allySavings.bonusAmount = NSDecimalNumber(string: "0")
+        allySavings.bonusStructure = BonusStructure.lumpSum.rawValue
+        allySavings.bonusRequirements = ""
+        allySavings.accountStatus = AccountStatus.open.rawValue
+        allySavings.eligibilityMonths = 12
+        allySavings.accountNumberLast4 = "7731"
+        allySavings.notes = "Joint savings — never ran a promo, just where the leftovers live."
+        allySavings.isArchived = false
+        allySavings.createdAt = now
+        allySavings.updatedAt = now
+        allySavings.person = jordan
+        allySavings.isHomeAccount = true
+        allySavings.isChurnAccount = false
+
         // MARK: Direct deposits
 
         let dd1 = DirectDeposit(context: context)
@@ -396,6 +422,11 @@ enum SampleData {
         jordanPaycheck.updatedAt = now
         jordanPaycheck.person = jordan
         dd4.paycheck = jordanPaycheck
+        // Round 3: the $624.50 remainder is routed explicitly to the joint
+        // savings account rather than being implied. Alex's paycheck is left
+        // without a `remainderAccount` on purpose — it's fully allocated, and it
+        // keeps the "no remainder destination set" path exercised in previews.
+        jordanPaycheck.remainderAccount = allySavings
 
         // MARK: Reminders
 

@@ -60,6 +60,19 @@ public class Account: NSManagedObject {
     /// be home accounts (checking + savings at two different banks); nothing
     /// enforces a single one, deliberately.
     @NSManaged public var isHomeAccount: Bool
+    /// Whether this account is being run for a signup bonus at all.
+    ///
+    /// Round 3: plenty of home accounts (the checking/savings the user had long
+    /// before they ever churned anything) never run a promotion. Rather than
+    /// making `bonusAmount`/`bonusStructure`/`bonusRequirements` optional — which
+    /// would ripple-break every round 1/2 accessor and call site — this flag
+    /// says "ignore the churn fields on this row". They stay populated with
+    /// harmless defaults (0 / `.lumpSum` / "" / 12).
+    ///
+    /// **Defaults to `true`** so every account that existed before this
+    /// attribute was added keeps behaving exactly as it did. Independent of
+    /// `isHomeAccount`: a home account can also be running a promo.
+    @NSManaged public var isChurnAccount: Bool
     @NSManaged public var createdAt: Date
     @NSManaged public var updatedAt: Date
 
@@ -78,6 +91,13 @@ public class Account: NSManagedObject {
     /// still authoritative for legacy rows. Nullify — deleting a bank unlinks
     /// accounts, it never deletes them.
     @NSManaged public var bank: Bank?
+    /// Paychecks whose unallocated remainder is routed to this account.
+    ///
+    /// Inverse of `Paycheck.remainderAccount`. Nullify both ways: deleting an
+    /// account must never delete a paycheck (that would destroy bookkeeping
+    /// history), and deleting a paycheck must never delete the account it was
+    /// routed to — same reasoning as `Reminder.account`.
+    @NSManaged public var remainderForPaychecks: NSSet?
 }
 
 // MARK: - Typed accessors
@@ -116,6 +136,11 @@ extension Account {
     var directDepositsArray: [DirectDeposit] {
         (directDeposits as? Set<DirectDeposit> ?? []).sorted { $0.scheduledDate < $1.scheduledDate }
     }
+
+    /// Paychecks routing their remainder here, newest pay date first.
+    var remainderForPaychecksArray: [Paycheck] {
+        (remainderForPaychecks as? Set<Paycheck> ?? []).sorted { $0.payDate > $1.payDate }
+    }
 }
 
 // MARK: - Generated relationship accessors
@@ -145,6 +170,18 @@ extension Account {
 
     @objc(removeDirectDeposits:)
     @NSManaged public func removeFromDirectDeposits(_ values: NSSet)
+
+    @objc(addRemainderForPaychecksObject:)
+    @NSManaged public func addToRemainderForPaychecks(_ value: Paycheck)
+
+    @objc(removeRemainderForPaychecksObject:)
+    @NSManaged public func removeFromRemainderForPaychecks(_ value: Paycheck)
+
+    @objc(addRemainderForPaychecks:)
+    @NSManaged public func addToRemainderForPaychecks(_ values: NSSet)
+
+    @objc(removeRemainderForPaychecks:)
+    @NSManaged public func removeFromRemainderForPaychecks(_ values: NSSet)
 }
 
 extension Account: Identifiable {}

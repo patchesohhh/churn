@@ -379,6 +379,35 @@ Direct Deposit function to the proper bank accounts." Concretely:
   year) and sorting (opening date, expected/finish date, reward amount,
   person) — a filter sheet or menu, your call on the exact UI.
 
+### Round 3 schema is built — actual API surface
+
+- **`Account.isChurnAccount: Bool`** (default `true` — every pre-existing
+  row/test still reads `true`, no ripple). Independent of `isHomeAccount`.
+  No existing Account field was made optional.
+  `Account.remainderForPaychecksArray: [Paycheck]` — the inverse of
+  `Paycheck.remainderAccount` (newest `payDate` first).
+- **`Offer.offerTitle: String?`** (now optional) — **use
+  `offer.displayTitle: String` at every display site, never read
+  `offerTitle` directly in a view.** It falls back to `bankName` when the
+  title is nil, empty, or whitespace-only. Saving a titleless offer stores
+  `nil`, not `""`.
+- **`Paycheck.remainderAccount: Account?`** (to-one, optional, nullify
+  both directions — deleting either side leaves the other untouched).
+- `AppTab` enum (`.home`/`.calendar`/`.accounts`/`.offers`/`.settings`)
+  and `AppTabSelection` (`@Observable`, `var selected: AppTab`) exist at
+  `ChurnApp/AppTabSelection.swift`, injected via `.environment` from
+  `MyApp`. `ContentView`'s `TabView` is bound to it — set
+  `appTabSelection.selected = .calendar` from anywhere to switch tabs.
+- `CalculationService.accountsOpenedThisYear`/`accountsClosedThisYear`
+  now filter to `isChurnAccount == true` (opening/closing a home account
+  isn't churning activity). `ytdEarnings`/`pendingBonusesTotal` were
+  deliberately left as-is — a non-churn account's placeholder $0 bonus
+  already makes filtering there a no-op.
+- Seed data: a 5th sample account, `allySavings` (home, non-churn,
+  Jordan's), and `jordanPaycheck.remainderAccount = allySavings` (the
+  partially-allocated sample) — `alexPaycheck` deliberately keeps a nil
+  `remainderAccount` so previews cover the "no destination set" state too.
+
 ## Explicitly out of scope for this build
 
 - Vertical Gantt chart with visual DD connectors (Calendar tab ships as a

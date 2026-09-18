@@ -123,7 +123,9 @@ private struct OfferRow: View {
                     Text(offer.bankName)
                         .font(.subheadline.weight(.semibold))
                 }
-                Text(offer.offerTitle)
+                // `offerTitle` is optional as of round 3; `displayTitle` falls
+                // back to the bank name when it's missing or blank.
+                Text(offer.displayTitle)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)

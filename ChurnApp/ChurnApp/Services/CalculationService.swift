@@ -91,16 +91,33 @@ enum CalculationService {
 
     // MARK: - Account counts
 
-    /// Number of accounts whose `openingDate` falls within the given year.
+    // Both counters below only count **churn** accounts (`isChurnAccount`,
+    // round 3). These two numbers are presented as churning activity — "you
+    // opened 6 accounts chasing bonuses this year" — and adding the joint
+    // savings account someone happened to open in January would quietly inflate
+    // that. It also matters for the *closed* counter specifically: closing a
+    // churn account is the end of a bonus cycle, while closing a home account is
+    // just housekeeping.
+    //
+    // This is a real behaviour change only for accounts explicitly marked
+    // non-churn. Every pre-round-3 account defaults `isChurnAccount` to true, so
+    // nothing existing shifts. (The money totals — `ytdEarnings`,
+    // `pendingBonusesTotal` — are deliberately left alone: a non-churn account
+    // carries a $0 placeholder bonus and so contributes nothing anyway, and
+    // filtering them there would be a no-op with an extra failure mode.)
+
+    /// Number of churn accounts whose `openingDate` falls within the given year.
     static func accountsOpenedThisYear(
         accounts: [Account],
         year: Int = Calendar.current.component(.year, from: Date())
     ) -> Int {
         let calendar = Calendar.current
-        return accounts.filter { calendar.component(.year, from: $0.openingDate) == year }.count
+        return accounts.filter {
+            $0.isChurnAccount && calendar.component(.year, from: $0.openingDate) == year
+        }.count
     }
 
-    /// Number of accounts whose `closedDate` falls within the given year.
+    /// Number of churn accounts whose `closedDate` falls within the given year.
     /// Accounts with no `closedDate` (never closed) are excluded.
     static func accountsClosedThisYear(
         accounts: [Account],
@@ -108,7 +125,7 @@ enum CalculationService {
     ) -> Int {
         let calendar = Calendar.current
         return accounts.filter { account in
-            guard let closedDate = account.closedDate else { return false }
+            guard account.isChurnAccount, let closedDate = account.closedDate else { return false }
             return calendar.component(.year, from: closedDate) == year
         }.count
     }

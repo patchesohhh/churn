@@ -95,7 +95,7 @@ struct AddEditOfferView: View {
             Form {
                 Section("Offer") {
                     BankPicker(selectedBank: $selectedBank, bankNameText: $bankName)
-                    TextField("Offer Title", text: $offerTitle)
+                    TextField("Offer Title (optional)", text: $offerTitle)
                         #if os(iOS)
                         .textInputAutocapitalization(.words)
                         #endif
@@ -207,7 +207,7 @@ struct AddEditOfferView: View {
 
         bankName = offer.bankName
         selectedBank = offer.bank
-        offerTitle = offer.offerTitle
+        offerTitle = offer.offerTitle ?? ""
         bonusAmountText = Self.decimalFormatter.string(from: offer.bonusAmountDecimal as NSDecimalNumber) ?? ""
         requirements = offer.requirements
 
@@ -246,10 +246,8 @@ struct AddEditOfferView: View {
             validationMessage = "Bank name is required."
             return
         }
-        guard !trimmedTitle.isEmpty else {
-            validationMessage = "Offer title is required."
-            return
-        }
+        // No title check: round 3 made `offerTitle` optional — an untitled offer
+        // displays as its bank name (see `Offer.displayTitle`).
         guard let bonusAmount = Decimal(string: bonusAmountText.trimmingCharacters(in: .whitespaces)),
               bonusAmount > 0 else {
             validationMessage = "Bonus amount must be greater than $0."
@@ -273,7 +271,8 @@ struct AddEditOfferView: View {
 
         targetOffer.bankName = trimmedBank
         targetOffer.bank = selectedBank
-        targetOffer.offerTitle = trimmedTitle
+        // Store nil rather than "" so "no title" is one state, not two.
+        targetOffer.offerTitle = trimmedTitle.isEmpty ? nil : trimmedTitle
         targetOffer.bonusAmountDecimal = bonusAmount
         targetOffer.requirements = requirements.trimmingCharacters(in: .whitespacesAndNewlines)
         targetOffer.expirationDate = hasExpirationDate ? expirationDate : nil

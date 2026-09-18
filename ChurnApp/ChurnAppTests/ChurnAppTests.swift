@@ -31,7 +31,9 @@ final class ChurnAppTests: XCTestCase {
         let offers = try context.fetch(NSFetchRequest<Offer>(entityName: "Offer"))
 
         XCTAssertEqual(people.count, 2, "Sample data models a two-earner household.")
-        XCTAssertEqual(accounts.count, 4)
+        // Five as of round 3: one account per status, plus the non-churn joint
+        // savings home account.
+        XCTAssertEqual(accounts.count, 5)
         XCTAssertEqual(deposits.count, 4)
         XCTAssertEqual(reminders.count, 3)
         XCTAssertEqual(offers.count, 2)

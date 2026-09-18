@@ -48,6 +48,18 @@ public class Paycheck: NSManagedObject {
     /// paycheck deletes its split rows, while deleting a single split
     /// (`DirectDeposit.paycheck` is nullify) leaves the paycheck untouched.
     @NSManaged public var directDeposits: NSSet?
+
+    /// Which home account receives this paycheck's unallocated remainder.
+    ///
+    /// Round 3. Optional and per-paycheck (not per-person) so a couple can route
+    /// a given cheque to a shared/joint account without changing anyone's
+    /// defaults. The UI seeds it from the person's own home account when one
+    /// exists; the user can override it to any home account.
+    ///
+    /// Nullify both ways: deleting the account leaves the paycheck (and its
+    /// splits) intact with no remainder destination, and deleting the paycheck
+    /// never touches the account.
+    @NSManaged public var remainderAccount: Account?
 }
 
 // MARK: - Typed accessors

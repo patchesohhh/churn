@@ -12,22 +12,31 @@ import CoreData
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(AppTabSelection.self) private var tabSelection
+
     var body: some View {
-        TabView {
+        @Bindable var tabSelection = tabSelection
+
+        TabView(selection: $tabSelection.selected) {
             HomeView()
                 .tabItem { Label("Home", systemImage: "house.fill") }
+                .tag(AppTab.home)
 
             CalendarView()
                 .tabItem { Label("Calendar", systemImage: "calendar") }
+                .tag(AppTab.calendar)
 
             AccountsListView()
                 .tabItem { Label("Accounts", systemImage: "building.columns.fill") }
+                .tag(AppTab.accounts)
 
             OffersListView()
                 .tabItem { Label("Offers", systemImage: "tag.fill") }
+                .tag(AppTab.offers)
 
             SettingsView()
                 .tabItem { Label("More", systemImage: "ellipsis.circle.fill") }
+                .tag(AppTab.settings)
         }
     }
 }
@@ -35,9 +44,11 @@ struct ContentView: View {
 #Preview("Populated") {
     ContentView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Empty") {
     ContentView()
         .environment(\.managedObjectContext, PersistenceController(inMemory: true).container.viewContext)
+        .environment(AppTabSelection())
 }

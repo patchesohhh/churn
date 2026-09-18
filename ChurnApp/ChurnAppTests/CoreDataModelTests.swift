@@ -362,6 +362,8 @@ final class CoreDataModelTests: XCTestCase {
     func testSampleDataPopulatesAnArbitraryContext() throws {
         XCTAssertTrue(SampleData.populate(in: context))
         XCTAssertEqual(try count(Person.self, "Person"), 2)
-        XCTAssertEqual(try count(Account.self, "Account"), 4)
+        // Five as of round 3: the four status-per-account rows plus the
+        // non-churn joint savings home account.
+        XCTAssertEqual(try count(Account.self, "Account"), 5)
     }
 }

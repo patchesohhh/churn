@@ -24,7 +24,10 @@ public class Offer: NSManagedObject {
 
     @NSManaged public var id: UUID
     @NSManaged public var bankName: String
-    @NSManaged public var offerTitle: String
+    /// Optional as of round 3 — a user jotting down "Chase, $300" shouldn't be
+    /// forced to invent a title. Display code should use `displayTitle`, which
+    /// falls back to `bankName`, rather than reading this directly.
+    @NSManaged public var offerTitle: String?
     /// The model enforces a minimum of 0 (no negative bonuses); see the note
     /// on `Account.bonusAmount` for why a strict "> 0" rule lives in the UI.
     /// Money is always `NSDecimalNumber` in the store. Use `bonusAmountDecimal`.
@@ -64,6 +67,15 @@ extension Offer {
     var bonusAmountDecimal: Decimal {
         get { bonusAmount.decimalValue }
         set { bonusAmount = NSDecimalNumber(decimal: newValue) }
+    }
+
+    /// What to show wherever a title would go: the user's title if they gave
+    /// one, otherwise the bank name. Centralised here so the list and detail
+    /// views can't drift apart on the fallback rule. Whitespace-only titles
+    /// count as absent.
+    var displayTitle: String {
+        let trimmed = offerTitle?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? bankName : trimmed
     }
 
     var accountsArray: [Account] {

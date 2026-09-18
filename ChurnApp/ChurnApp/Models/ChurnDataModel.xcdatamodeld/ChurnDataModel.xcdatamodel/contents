@@ -15,6 +15,7 @@
         <attribute name="expectedBonusDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="isArchived" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isChurnAccount" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="isHomeAccount" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="minimumBalance" optional="YES" attributeType="Decimal" minValueString="0" defaultValueString="0" usesScalarValueType="NO"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
@@ -24,6 +25,7 @@
         <relationship name="directDeposits" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="DirectDeposit" inverseName="account" inverseEntity="DirectDeposit"/>
         <relationship name="offer" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Offer" inverseName="accounts" inverseEntity="Offer"/>
         <relationship name="person" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Person" inverseName="accounts" inverseEntity="Person"/>
+        <relationship name="remainderForPaychecks" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Paycheck" inverseName="remainderAccount" inverseEntity="Paycheck"/>
         <relationship name="reminders" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Reminder" inverseName="account" inverseEntity="Reminder"/>
         <fetchIndex name="byAccountStatus">
             <fetchIndexElement property="accountStatus" type="Binary" order="ascending"/>
@@ -78,7 +80,7 @@
         <attribute name="minimumDeposit" optional="YES" attributeType="Decimal" minValueString="0" defaultValueString="0" usesScalarValueType="NO"/>
         <attribute name="monthsToMaintain" optional="YES" attributeType="Integer 16" minValueString="0" defaultValueString="0" usesScalarValueType="NO"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
-        <attribute name="offerTitle" attributeType="String"/>
+        <attribute name="offerTitle" optional="YES" attributeType="String"/>
         <attribute name="offerURL" optional="YES" attributeType="String"/>
         <attribute name="requirements" attributeType="String" defaultValueString=""/>
         <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
@@ -102,6 +104,7 @@
         <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="directDeposits" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="DirectDeposit" inverseName="paycheck" inverseEntity="DirectDeposit"/>
         <relationship name="person" maxCount="1" deletionRule="Nullify" destinationEntity="Person" inverseName="paychecks" inverseEntity="Person"/>
+        <relationship name="remainderAccount" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="remainderForPaychecks" inverseEntity="Account"/>
         <fetchIndex name="byPayDate">
             <fetchIndexElement property="payDate" type="Binary" order="ascending"/>
         </fetchIndex>
