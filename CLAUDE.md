@@ -304,6 +304,81 @@ Direct Deposit function to the proper bank accounts." Concretely:
   deliberately left bank-less to keep the string-fallback path exercised
   in previews.
 
+## Round 3 changes — read before touching Models/ or any Views/ file listed below
+
+- **Home accounts without a promotion.** Many home accounts (the user's
+  literal case: checking/savings they already had before ever opening a
+  bonus account) never run a bonus at all. Decision: add
+  **`Account.isChurnAccount: Bool` (default true)** rather than making any
+  existing field optional — this keeps every existing accessor
+  (`bonusAmountDecimal`, `bonusStructureValue`, etc.) exactly as it is, so
+  round 1/2 code doesn't ripple-break. `isChurnAccount` and `isHomeAccount`
+  are independent — a home account *can* also be running a promo. In the
+  add/edit form: default `isChurnAccount` to **false** the moment a *new*
+  account is marked `isHomeAccount` (most home accounts have no promo);
+  the user can still flip it on to add bonus info to a home account that
+  happens to have one. When off, churn fields (bonus amount/structure/
+  requirements, expected/actual date, eligibility window, offer link) are
+  hidden and not required — save with sane defaults (0 / `.lumpSum` / ""
+  / nil / 12) rather than validating them.
+  **`AccountDetailView` for `isHomeAccount && !isChurnAccount`** shows only:
+  bank name, account type, last-4, and the current total being direct
+  deposited into it (sum of `DirectDeposit.amountDecimal` where
+  `account == self` and `statusValue == .scheduled`) — no bonus/timeline/
+  requirements sections.
+- **`Offer.offerTitle` is now optional** (was required). Fall back to
+  displaying the bank name where a title would have shown if it's
+  nil/empty.
+- **`Paycheck.remainderAccount: Account?`** (new, to-one, nullify) — which
+  home account gets the unallocated remainder for *this* paycheck.
+  Defaults to the paycheck's person's own home account if they have one
+  set; user can override to any home account (not restricted to their
+  own — a couple may route to a shared/joint account). The split-account
+  picker in `AddEditPaycheckView` **excludes home accounts** — home
+  accounts only ever receive the automatic remainder, never an explicit
+  DD line item.
+- **Calendar becomes a projected, effectively-open-ended list**, not just
+  persisted `Paycheck` rows: for each `Person`, repeat their most recent
+  `Paycheck`'s split pattern forward from `nextPaycheckDate` at their
+  `payFrequency` for a bounded window (document whatever window you pick,
+  e.g. next 12 occurrences per person — a `List` can't truly be infinite,
+  this is the practical stand-in, and it's an explicit placeholder for
+  the eventual Gantt chart, not the final visualization).
+  **Promotion-end awareness, using data that already exists — no new
+  schema for this:** in the projection, exclude any account whose
+  `actualBonusDate != nil` (its bonus already posted, so the promo
+  requirement is done) from receiving a projected split; redirect that
+  split's amount into the projected remainder instead. Real, persisted
+  `Paycheck`s are unaffected by this — it's a display-only projection
+  rule for the *not-yet-created* future entries.
+  Projected (not-yet-real) entries aren't editable directly — tapping one
+  should offer to materialize it into a real `Paycheck` (which then opens
+  the normal edit flow).
+- **Paychecks stay editable after the fact** (already true via
+  `AddEditPaycheckView(person:paycheck:)` in edit mode from round 2) —
+  this round just needs to confirm nothing added an artificial
+  past-date restriction, since accurate bookkeeping after the DD
+  allocation didn't get swapped in time is the whole point.
+- **Home tab's earnings carousel goes native-paged**: center-aligned,
+  loops at the ends, no page dots, adjacent items peek in at the screen
+  edges. Build it on `ScrollView(.horizontal)` +
+  `.scrollTargetBehavior(.viewAligned)` + `.scrollTargetLayout()` +
+  `.scrollPosition(id:)` (the "native carousel" the user means) — not
+  `TabView(.page)`, which is what round 1 used and doesn't support
+  peeking edges or hiding dots as cleanly.
+- **Home's "View Full Schedule" button** needs to actually switch to the
+  Calendar tab. `ContentView`/`MyApp` gained a small shared
+  `AppTabSelection` (`@Observable`, injected via `.environment`) for
+  exactly this — any view can set `appTabSelection.selected = .calendar`
+  instead of the app needing a NavigationPath that crosses tab
+  boundaries (which SwiftUI's `TabView` doesn't support directly).
+- **Accounts list gets richer**: show opening date, expected bonus date,
+  and a simple elapsed-time progress bar (opening → expected date) per
+  churn account (skip the progress bar for non-churn accounts — there's
+  no timeline to show). Add filtering (status, owner/person, calendar
+  year) and sorting (opening date, expected/finish date, reward amount,
+  person) — a filter sheet or menu, your call on the exact UI.
+
 ## Explicitly out of scope for this build
 
 - Vertical Gantt chart with visual DD connectors (Calendar tab ships as a
