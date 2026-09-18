@@ -45,6 +45,14 @@ public class DirectDeposit: NSManagedObject {
     /// from an account. (Deleting the *account* does cascade it away.)
     @NSManaged public var account: Account?
     @NSManaged public var person: Person?
+    /// The income event this row is a split of, once the user groups their
+    /// deposits into paychecks. Optional and additive — round-1 deposits have
+    /// no paycheck, and `account`/`person` above are unchanged.
+    ///
+    /// Nullify on this side: un-assigning (or deleting) a single split must
+    /// never delete the paycheck. The cascade lives on `Paycheck.directDeposits`
+    /// — deleting a paycheck does take its splits with it.
+    @NSManaged public var paycheck: Paycheck?
 }
 
 // MARK: - Typed accessors

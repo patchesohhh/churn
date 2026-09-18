@@ -50,6 +50,10 @@ public class Offer: NSManagedObject {
 
     /// Nullify: deleting an offer must leave any accounts opened from it alone.
     @NSManaged public var accounts: NSSet?
+    /// The `Bank` row this offer is from, when one has been picked. Optional
+    /// and additive — `bankName` above stays the display string. Nullify:
+    /// deleting a bank unlinks its offers rather than deleting them.
+    @NSManaged public var bank: Bank?
 }
 
 // MARK: - Convenience

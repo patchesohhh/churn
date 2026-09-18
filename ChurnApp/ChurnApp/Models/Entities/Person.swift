@@ -49,6 +49,11 @@ public class Person: NSManagedObject {
 
     @NSManaged public var accounts: NSSet?
     @NSManaged public var directDeposits: NSSet?
+    /// This person's income history. Cascade on *this* side: deleting a person
+    /// deletes their paycheck history (and, via `Paycheck.directDeposits`,
+    /// those paychecks' splits). Deleting a single paycheck leaves the person
+    /// alone — `Paycheck.person` is nullify.
+    @NSManaged public var paychecks: NSSet?
 }
 
 // MARK: - Typed accessors
@@ -76,6 +81,12 @@ extension Person {
 
     var directDepositsArray: [DirectDeposit] {
         (directDeposits as? Set<DirectDeposit> ?? []).sorted { $0.scheduledDate < $1.scheduledDate }
+    }
+
+    /// Paychecks newest-first — the Calendar tab and Home both read the most
+    /// recent income events first.
+    var paychecksArray: [Paycheck] {
+        (paychecks as? Set<Paycheck> ?? []).sorted { $0.payDate > $1.payDate }
     }
 }
 
@@ -106,6 +117,18 @@ extension Person {
 
     @objc(removeDirectDeposits:)
     @NSManaged public func removeFromDirectDeposits(_ values: NSSet)
+
+    @objc(addPaychecksObject:)
+    @NSManaged public func addToPaychecks(_ value: Paycheck)
+
+    @objc(removePaychecksObject:)
+    @NSManaged public func removeFromPaychecks(_ value: Paycheck)
+
+    @objc(addPaychecks:)
+    @NSManaged public func addToPaychecks(_ values: NSSet)
+
+    @objc(removePaychecks:)
+    @NSManaged public func removeFromPaychecks(_ values: NSSet)
 }
 
 extension Person: Identifiable {}

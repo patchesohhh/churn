@@ -12,7 +12,14 @@
 //
 //  All money arithmetic uses `Decimal`, never `Double`, per CLAUDE.md.
 //
+//  `import CoreData` is here only so `isEligible` can compare two `Bank` rows
+//  by `objectID` (round 2). This layer still never fetches, saves, or touches a
+//  context — callers hand it already-fetched objects, as before. The import is
+//  required because this project enables Swift's member-import-visibility
+//  upcoming feature, so `NSManagedObject` members aren't re-exported implicitly.
+//
 
+import CoreData
 import Foundation
 
 enum CalculationService {
@@ -123,12 +130,41 @@ enum CalculationService {
     /// At the exact boundary (`date == closedDate + eligibilityMonths`), the
     /// window has elapsed and the person is eligible again — `date` must be
     /// strictly *before* the reeligibility date to still be blocked.
-    static func isEligible(person: Person, bankName: String, asOf date: Date = Date()) -> Bool {
+    ///
+    /// **Bank matching (round 2).** `bank` is an optional, additive refinement:
+    /// when the caller passes a `Bank` row *and* the closed account also has
+    /// one, the two are compared by object identity — that's an exact,
+    /// user-confirmed link and beats any string comparison. Whenever either
+    /// side lacks a `Bank` (legacy rows, or a target the user typed by hand),
+    /// the original case-insensitive `bankName` match is used instead. The
+    /// fallback is never dropped, so nothing needs migrating: existing callers
+    /// that pass only `bankName` behave exactly as they did before.
+    ///
+    /// - Parameters:
+    ///   - bankName: free-text bank name, always required — it's the fallback
+    ///     match and the label the UI already has.
+    ///   - bank: the `Bank` row for the account/offer being evaluated, when the
+    ///     user has picked one. Defaults to nil for backward compatibility.
+    static func isEligible(
+        person: Person,
+        bankName: String,
+        bank: Bank? = nil,
+        asOf date: Date = Date()
+    ) -> Bool {
         let calendar = Calendar.current
         let targetBank = bankName.lowercased()
 
+        /// True when this closed account is at the same bank as the target.
+        /// Prefers the relationship, falls back to the name.
+        func matchesTargetBank(_ account: Account) -> Bool {
+            if let bank, let accountBank = account.bank {
+                return accountBank.objectID == bank.objectID
+            }
+            return account.bankName.lowercased() == targetBank
+        }
+
         let blockingAccounts = person.accountsArray.filter { account in
-            guard account.bankName.lowercased() == targetBank,
+            guard matchesTargetBank(account),
                   let closedDate = account.closedDate else {
                 return false
             }

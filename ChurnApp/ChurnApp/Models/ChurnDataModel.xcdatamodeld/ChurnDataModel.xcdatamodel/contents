@@ -15,10 +15,12 @@
         <attribute name="expectedBonusDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="isArchived" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isHomeAccount" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="minimumBalance" optional="YES" attributeType="Decimal" minValueString="0" defaultValueString="0" usesScalarValueType="NO"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="openingDate" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="bank" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Bank" inverseName="accounts" inverseEntity="Bank"/>
         <relationship name="directDeposits" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="DirectDeposit" inverseName="account" inverseEntity="DirectDeposit"/>
         <relationship name="offer" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Offer" inverseName="accounts" inverseEntity="Offer"/>
         <relationship name="person" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Person" inverseName="accounts" inverseEntity="Person"/>
@@ -33,6 +35,16 @@
             <fetchIndexElement property="isArchived" type="Binary" order="ascending"/>
         </fetchIndex>
     </entity>
+    <entity name="Bank" representedClassName="Bank" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <relationship name="accounts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="bank" inverseEntity="Account"/>
+        <relationship name="offers" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Offer" inverseName="bank" inverseEntity="Offer"/>
+        <fetchIndex name="byName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
     <entity name="DirectDeposit" representedClassName="DirectDeposit" syncable="YES">
         <attribute name="amount" attributeType="Decimal" minValueString="0" defaultValueString="0" usesScalarValueType="NO"/>
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
@@ -44,6 +56,7 @@
         <attribute name="status" attributeType="String" defaultValueString="scheduled"/>
         <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="account" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="directDeposits" inverseEntity="Account"/>
+        <relationship name="paycheck" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Paycheck" inverseName="directDeposits" inverseEntity="Paycheck"/>
         <relationship name="person" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Person" inverseName="directDeposits" inverseEntity="Person"/>
         <fetchIndex name="byScheduledDate">
             <fetchIndexElement property="scheduledDate" type="Binary" order="ascending"/>
@@ -70,6 +83,7 @@
         <attribute name="requirements" attributeType="String" defaultValueString=""/>
         <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="accounts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="offer" inverseEntity="Account"/>
+        <relationship name="bank" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Bank" inverseName="offers" inverseEntity="Bank"/>
         <fetchIndex name="byBankName">
             <fetchIndexElement property="bankName" type="Binary" order="ascending"/>
         </fetchIndex>
@@ -78,6 +92,18 @@
         </fetchIndex>
         <fetchIndex name="byExpirationDate">
             <fetchIndexElement property="expirationDate" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="Paycheck" representedClassName="Paycheck" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="payDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="totalAmount" attributeType="Decimal" minValueString="0" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="directDeposits" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="DirectDeposit" inverseName="paycheck" inverseEntity="DirectDeposit"/>
+        <relationship name="person" maxCount="1" deletionRule="Nullify" destinationEntity="Person" inverseName="paychecks" inverseEntity="Person"/>
+        <fetchIndex name="byPayDate">
+            <fetchIndexElement property="payDate" type="Binary" order="ascending"/>
         </fetchIndex>
     </entity>
     <entity name="Person" representedClassName="Person" syncable="YES">
@@ -93,6 +119,7 @@
         <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="accounts" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Account" inverseName="person" inverseEntity="Account"/>
         <relationship name="directDeposits" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="DirectDeposit" inverseName="person" inverseEntity="DirectDeposit"/>
+        <relationship name="paychecks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Paycheck" inverseName="person" inverseEntity="Paycheck"/>
         <fetchIndex name="byName">
             <fetchIndexElement property="name" type="Binary" order="ascending"/>
         </fetchIndex>

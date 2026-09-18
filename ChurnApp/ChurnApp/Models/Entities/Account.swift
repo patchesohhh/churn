@@ -55,6 +55,11 @@ public class Account: NSManagedObject {
     /// `NSManagedObject` already defines `isDeleted` and shadowing it breaks
     /// Core Data's own change tracking.
     @NSManaged public var isArchived: Bool
+    /// Marks an account as part of the household's permanent "home base" —
+    /// where a paycheck's unallocated remainder lands. Multiple accounts may
+    /// be home accounts (checking + savings at two different banks); nothing
+    /// enforces a single one, deliberately.
+    @NSManaged public var isHomeAccount: Bool
     @NSManaged public var createdAt: Date
     @NSManaged public var updatedAt: Date
 
@@ -67,6 +72,12 @@ public class Account: NSManagedObject {
     /// Nullify both ways: offers are reference data that outlive accounts, and
     /// deleting an account must never delete the offer it came from.
     @NSManaged public var offer: Offer?
+    /// The `Bank` row this account belongs to, when one has been picked.
+    ///
+    /// Optional and additive: `bankName` above is still the display string and
+    /// still authoritative for legacy rows. Nullify — deleting a bank unlinks
+    /// accounts, it never deletes them.
+    @NSManaged public var bank: Bank?
 }
 
 // MARK: - Typed accessors

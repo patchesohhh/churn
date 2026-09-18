@@ -127,8 +127,9 @@ struct PersistenceController {
 /// shared `preview` singleton.
 enum SampleData {
 
-    /// Inserts two household earners, four accounts across every status, a
-    /// handful of direct deposits, two reminders and two offers, then saves.
+    /// Inserts two household earners, three banks, four accounts across every
+    /// status, a handful of direct deposits, two paychecks, three reminders and
+    /// two offers, then saves.
     @discardableResult
     static func populate(in context: NSManagedObjectContext) -> Bool {
         let now = Date()
@@ -164,6 +165,28 @@ enum SampleData {
         jordan.createdAt = now
         jordan.updatedAt = now
 
+        // MARK: Banks
+        //
+        // Round 2 additive schema: a `Bank` row is the strong link that
+        // `bankName` strings only approximate. Only a few accounts/offers get
+        // one on purpose — the rest stay name-only so previews and tests keep
+        // exercising the legacy, no-`Bank` path that `isEligible` falls back to.
+
+        let chaseBank = Bank(context: context)
+        chaseBank.id = UUID()
+        chaseBank.name = "Chase"
+        chaseBank.createdAt = now
+
+        let wellsFargoBank = Bank(context: context)
+        wellsFargoBank.id = UUID()
+        wellsFargoBank.name = "Wells Fargo"
+        wellsFargoBank.createdAt = now
+
+        let sofiBank = Bank(context: context)
+        sofiBank.id = UUID()
+        sofiBank.name = "SoFi"
+        sofiBank.createdAt = now
+
         // MARK: Offers
 
         let sofiOffer = Offer(context: context)
@@ -183,6 +206,8 @@ enum SampleData {
         sofiOffer.notes = "No monthly fee, so maintenance window is cheap."
         sofiOffer.createdAt = now
         sofiOffer.updatedAt = now
+        // `bankName` above stays the display string; `bank` is the added link.
+        sofiOffer.bank = sofiBank
 
         let usBankOffer = Offer(context: context)
         usBankOffer.id = UUID()
@@ -223,6 +248,10 @@ enum SampleData {
         chase.createdAt = now
         chase.updatedAt = now
         chase.person = alex
+        chase.bank = chaseBank
+        // The household's home base: whatever a paycheck doesn't allocate
+        // elsewhere lands here.
+        chase.isHomeAccount = true
 
         // Open and actively working toward requirements.
         let sofi = Account(context: context)
@@ -242,6 +271,7 @@ enum SampleData {
         sofi.updatedAt = now
         sofi.person = alex
         sofi.offer = sofiOffer
+        sofi.bank = sofiBank
 
         // Already finished and closed — feeds all-time earnings.
         let citi = Account(context: context)
@@ -332,6 +362,40 @@ enum SampleData {
         dd4.updatedAt = now
         dd4.account = usBank
         dd4.person = jordan
+
+        // MARK: Paychecks
+        //
+        // Round 2: a `Paycheck` is one income event, and the `DirectDeposit`
+        // rows pointing at it are its splits. These reuse the deposits created
+        // above rather than adding new ones — `paycheck` is an additive,
+        // optional link, and dd2/dd3 deliberately stay unlinked so previews and
+        // tests still cover round-1 deposits that belong to no paycheck.
+        //
+        // Between them these two cover both states the Calendar tab renders:
+        // fully allocated (remainder $0) and partially allocated (remainder
+        // flows to the home account). The remainder itself is never stored —
+        // see `Paycheck.unallocatedAmountDecimal`.
+
+        // Fully allocated: $2,400 gross, all $2,400 routed to SoFi.
+        let alexPaycheck = Paycheck(context: context)
+        alexPaycheck.id = UUID()
+        alexPaycheck.payDate = date(daysFromNow: -9)
+        alexPaycheck.totalAmount = NSDecimalNumber(string: "2400.00")
+        alexPaycheck.createdAt = now
+        alexPaycheck.updatedAt = now
+        alexPaycheck.person = alex
+        dd1.paycheck = alexPaycheck
+
+        // Partially allocated: $2,500 gross (a bigger-than-usual cheque),
+        // $1,875.50 routed to U.S. Bank, $624.50 left over for the home account.
+        let jordanPaycheck = Paycheck(context: context)
+        jordanPaycheck.id = UUID()
+        jordanPaycheck.payDate = date(daysFromNow: 9)
+        jordanPaycheck.totalAmount = NSDecimalNumber(string: "2500.00")
+        jordanPaycheck.createdAt = now
+        jordanPaycheck.updatedAt = now
+        jordanPaycheck.person = jordan
+        dd4.paycheck = jordanPaycheck
 
         // MARK: Reminders
 

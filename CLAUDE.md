@@ -266,6 +266,44 @@ Direct Deposit function to the proper bank accounts." Concretely:
   (payDate + person + total, with its DirectDeposit splits underneath and
   the computed remainder), not a flat list of individual DirectDeposit rows.
 
+### Round 2 schema is built — actual API surface
+
+- **`Bank`**: `id`, `name`, `createdAt`. `bank.accountsArray` (newest
+  `openingDate` first), `bank.offersArray` (newest `createdAt` first).
+- **`Paycheck`**: `id`, `payDate`, `totalAmountDecimal` (typed, like every
+  other money field), `createdAt`/`updatedAt`. `paycheck.person: Person`
+  (non-optional). `paycheck.directDepositsArray: [DirectDeposit]` (sorted).
+  `paycheck.allocatedAmountDecimal` / `paycheck.unallocatedAmountDecimal`
+  (both **computed**, never stored — the latter can go **negative** on
+  over-allocation, deliberately, so the UI can flag it rather than
+  silently clamp). `person.paychecksArray: [Paycheck]` (newest first).
+- **Delete rules** (deviates from the original ask in one place, on
+  purpose — same shape as the existing `Reminder.account` precedent):
+  `Person.paychecks` is the **cascade** side (delete a person → their
+  paychecks go), `Paycheck.person` is nullify. `Paycheck.directDeposits`
+  is cascade (delete a paycheck → its splits go); deleting one split
+  leaves the paycheck and its siblings untouched.
+- **`Account.bank: Bank?`**, **`Account.isHomeAccount: Bool`** (default
+  false, no single-home constraint — multiple allowed).
+  **`Offer.bank: Bank?`**. **`DirectDeposit.paycheck: Paycheck?`** —
+  `DirectDeposit.account`/`.person` are unchanged, still there, still how
+  every existing view reads a deposit's destination/owner.
+- **`CalculationService.isEligible` new signature** (backward compatible —
+  no existing call site needed to change):
+  ```swift
+  static func isEligible(person: Person, bankName: String, bank: Bank? = nil, asOf date: Date = Date()) -> Bool
+  ```
+  Prefers `Bank`-relationship matching (by `objectID`) when both sides
+  have a `Bank` set; falls back to the original case-insensitive
+  `bankName` string match otherwise — pass `bank:` whenever you have one
+  available (e.g. from the Bank picker).
+- Seed data (`SampleData.populate`): 3 `Bank` rows (Chase/Wells
+  Fargo/SoFi), the Chase sample account is `isHomeAccount = true`, two
+  sample `Paycheck`s (one fully allocated, one partially — exercises the
+  unallocated-remainder UI state), and at least one account/offer
+  deliberately left bank-less to keep the string-fallback path exercised
+  in previews.
+
 ## Explicitly out of scope for this build
 
 - Vertical Gantt chart with visual DD connectors (Calendar tab ships as a
