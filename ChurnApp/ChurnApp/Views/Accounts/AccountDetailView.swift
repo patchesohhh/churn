@@ -163,20 +163,26 @@ struct AccountDetailView: View {
         }
     }
 
+    // A full List (ReminderListView) can't nest cleanly inside this screen's
+    // own List/Section per SwiftUI's list-in-list scrolling limitation, so
+    // reminders are managed on a pushed sub-screen (AccountRemindersScreen
+    // below) that hosts the real, reusable ReminderListView component.
     private var remindersSection: some View {
         Section("Reminders") {
             let reminders = account.remindersArray.filter { !$0.isArchived }
-            if reminders.isEmpty {
-                Text("No reminders for this account.")
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(reminders, id: \.id) { reminder in
-                    HStack {
-                        Label(reminder.title, systemImage: reminder.reminderTypeValue.systemImageName)
-                        Spacer()
-                        Text(reminder.dueDate.formatted(date: .abbreviated, time: .omitted))
-                            .font(.caption)
-                            .foregroundStyle(reminder.isOverdue ? .red : .secondary)
+            NavigationLink {
+                AccountRemindersScreen(account: account)
+            } label: {
+                HStack {
+                    Label("Reminders", systemImage: "bell.fill")
+                    Spacer()
+                    if reminders.isEmpty {
+                        Text("None")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        let overdueCount = reminders.filter(\.isOverdue).count
+                        Text(overdueCount > 0 ? "\(overdueCount) overdue" : "\(reminders.count)")
+                            .foregroundStyle(overdueCount > 0 ? .red : .secondary)
                     }
                 }
             }
@@ -241,6 +247,39 @@ struct AccountDetailView: View {
             try viewContext.save()
         } catch {
             assertionFailure("Failed to save Core Data context: \(error)")
+        }
+    }
+}
+
+// MARK: - Account Reminders Screen
+
+/// Pushed from `remindersSection` above. Hosts the real, reusable
+/// `ReminderListView` component (built for both this per-account use and a
+/// possible future cross-account list) plus the add-reminder sheet.
+private struct AccountRemindersScreen: View {
+    @ObservedObject var account: Account
+    @State private var isPresentingAdd = false
+
+    var body: some View {
+        ReminderListView(
+            reminders: account.remindersArray.filter { !$0.isArchived },
+            emptyTitle: "No Reminders for This Account",
+            emptyMessage: "Add a reminder to stay on top of this account's bonus.",
+            onAddReminder: { isPresentingAdd = true }
+        )
+        .navigationTitle("\(account.bankName) Reminders")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    isPresentingAdd = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .sheet(isPresented: $isPresentingAdd) {
+            AddEditReminderView(account: account, reminder: nil)
         }
     }
 }
