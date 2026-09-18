@@ -13,6 +13,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 // MARK: - PayFrequency
 
@@ -126,6 +127,23 @@ enum AccountStatus: String, CaseIterable, Identifiable {
     /// maintenance window). Closed and prospecting accounts are inert.
     var isActive: Bool {
         self == .open || self == .maintaining
+    }
+
+    /// Semantic tint for `StatusBadge` and any other status-aware UI.
+    /// Chosen from the system palette (not custom asset colors) so it adapts
+    /// automatically to light/dark and to accessibility contrast settings.
+    /// - `.prospecting`: still just an idea — neutral gray.
+    /// - `.open`: actively being worked — blue, matches the system "active" tint.
+    /// - `.maintaining`: bonus is earned, just waiting out the clock — green,
+    ///   signals "money secured".
+    /// - `.closed`: done, inert — secondary gray, visually recedes.
+    var color: Color {
+        switch self {
+        case .prospecting: .gray
+        case .open: .blue
+        case .maintaining: .green
+        case .closed: .secondary
+        }
     }
 }
 

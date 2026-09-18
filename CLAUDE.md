@@ -116,6 +116,36 @@ are the real API surface, not the aspirational one:
   2 offers) — reuse this in every `#Preview` and test rather than building
   ad hoc fixtures.
 
+### Component library is built — reuse these, don't rebuild them
+
+`Views/Components/` already has (all with `#Preview`s, all built on native
+SwiftUI/materials):
+
+- `MoneyText(amount: Decimal, size: .large|.medium|.small = .medium, color: Color? = nil)`
+- `StatCard(label:amount:subtitle:valueColor:trend:)` (money) and
+  `GenericStatCard(label:value:subtitle:valueColor:)` (non-money values)
+- `SectionHeaderView(title:subtitle:actionTitle:action:)`
+- `StatusBadge(status: AccountStatus)` and
+  `GenericStatusBadge(text:color:systemImageName:)`
+- `EmptyStateView(systemImageName:title:message:actionTitle:action:)` (built
+  on native `ContentUnavailableView`)
+- `AccountCard(account: Account, compact: Bool = false)` — use `compact: true`
+  on Home, full style on the Accounts tab. **Don't build a second account
+  card.**
+- `PrimaryButtonStyle` via `.buttonStyle(.primary)` /
+  `.buttonStyle(.primary(fullWidth:))` — only for CTAs `.borderedProminent`
+  doesn't cover; use plain `.borderedProminent` otherwise.
+- `AccountStatus.color: Color` now exists on the enum (added alongside
+  `displayName`) — `Models/Enums.swift` now imports SwiftUI, not just
+  Foundation.
+
+**Any `#Preview`/view file that touches Core Data types (`.viewContext`,
+`.fetch`, `Account`, etc.) needs an explicit `import CoreData`** alongside
+`import SwiftUI` — this project has Swift's member-import-visibility
+upcoming feature enabled, so the implicit re-export other projects rely on
+doesn't happen here. This bit both the foundation and the component agent;
+don't be the third.
+
 ## Testing — required, this is how progress gets verified without a human at the wheel
 
 - Every non-trivial piece of logic (Core Data validation, `CalculationService`
