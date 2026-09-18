@@ -101,7 +101,7 @@ struct OfferDetailView: View {
             }
         }
         .navigationTitle(offer.bankName)
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {

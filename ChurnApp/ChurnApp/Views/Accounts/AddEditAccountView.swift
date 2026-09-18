@@ -70,7 +70,7 @@ struct AddEditAccountView: View {
                 notesSection
             }
             .navigationTitle(isEditing ? "Edit Account" : "New Account")
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -100,7 +100,9 @@ struct AddEditAccountView: View {
     private var bankSection: some View {
         Section("Bank") {
             TextField("Bank Name", text: $bankName)
+                #if os(iOS)
                 .textInputAutocapitalization(.words)
+                #endif
 
             if didAttemptSave && bankName.trimmingCharacters(in: .whitespaces).isEmpty {
                 Text("Bank name is required.")
@@ -125,7 +127,9 @@ struct AddEditAccountView: View {
                 Text("$")
                     .foregroundStyle(.secondary)
                 TextField("Amount", text: $bonusAmountText)
+                    #if os(iOS)
                     .keyboardType(.decimalPad)
+                    #endif
             }
 
             if didAttemptSave && bonusAmountDecimal == nil {
@@ -158,7 +162,9 @@ struct AddEditAccountView: View {
                     Text("$")
                         .foregroundStyle(.secondary)
                     TextField("Minimum Balance", text: $minimumBalanceText)
+                        #if os(iOS)
                         .keyboardType(.decimalPad)
+                        #endif
                 }
             }
 

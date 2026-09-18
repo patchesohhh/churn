@@ -62,7 +62,7 @@ struct PersonSetupView: View {
             colorSection
         }
         .navigationTitle(isEditing ? "Edit Person" : "Add Person")
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save") { save() }
@@ -77,7 +77,9 @@ struct PersonSetupView: View {
     private var identitySection: some View {
         Section("Identity") {
             TextField("Name", text: $name)
+                #if os(iOS)
                 .textInputAutocapitalization(.words)
+                #endif
 
             if didAttemptSave && name.trimmingCharacters(in: .whitespaces).isEmpty {
                 Text("Name is required.")
@@ -86,7 +88,9 @@ struct PersonSetupView: View {
             }
 
             TextField("Default Bank (optional)", text: $defaultBankName)
+                #if os(iOS)
                 .textInputAutocapitalization(.words)
+                #endif
         }
     }
 
@@ -102,7 +106,9 @@ struct PersonSetupView: View {
                 Text("$")
                     .foregroundStyle(.secondary)
                 TextField("Paycheck Amount", text: $paycheckAmountText)
+                    #if os(iOS)
                     .keyboardType(.decimalPad)
+                    #endif
             }
 
             if didAttemptSave && paycheckAmountDecimal == nil {

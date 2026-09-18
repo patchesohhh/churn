@@ -91,16 +91,22 @@ struct AddEditOfferView: View {
             Form {
                 Section("Offer") {
                     TextField("Bank Name", text: $bankName)
+                        #if os(iOS)
                         .textInputAutocapitalization(.words)
+                        #endif
                     TextField("Offer Title", text: $offerTitle)
+                        #if os(iOS)
                         .textInputAutocapitalization(.words)
+                        #endif
                     HStack {
                         Text("Bonus Amount")
                         Spacer()
                         TextField("$0.00", text: $bonusAmountText)
-                            .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(maxWidth: 140)
+                            #if os(iOS)
+                            .keyboardType(.decimalPad)
+                            #endif
                     }
                 }
 
@@ -130,9 +136,11 @@ struct AddEditOfferView: View {
                             Text("Minimum Deposit")
                             Spacer()
                             TextField("$0.00", text: $minimumDepositText)
-                                .keyboardType(.decimalPad)
                                 .multilineTextAlignment(.trailing)
                                 .frame(maxWidth: 140)
+                                #if os(iOS)
+                                .keyboardType(.decimalPad)
+                                #endif
                         }
                     }
 
@@ -144,18 +152,22 @@ struct AddEditOfferView: View {
                             Text("Months to Maintain")
                             Spacer()
                             TextField("0", text: $monthsToMaintainText)
-                                .keyboardType(.numberPad)
                                 .multilineTextAlignment(.trailing)
                                 .frame(maxWidth: 80)
+                                #if os(iOS)
+                                .keyboardType(.numberPad)
+                                #endif
                         }
                     }
                 }
 
                 Section("More Info") {
                     TextField("Offer URL", text: $offerURLText)
+                        .autocorrectionDisabled()
+                        #if os(iOS)
                         .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
+                        #endif
                     TextField("Notes", text: $notes, axis: .vertical)
                         .lineLimit(2...5)
                 }
@@ -174,7 +186,7 @@ struct AddEditOfferView: View {
                 }
             }
             .navigationTitle(isEditing ? "Edit Offer" : "Add Offer")
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

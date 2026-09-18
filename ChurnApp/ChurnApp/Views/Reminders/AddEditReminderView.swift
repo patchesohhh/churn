@@ -80,7 +80,7 @@ struct AddEditReminderView: View {
                 }
             }
             .navigationTitle(isEditing ? "Edit Reminder" : "New Reminder")
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

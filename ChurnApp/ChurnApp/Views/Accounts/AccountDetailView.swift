@@ -34,7 +34,7 @@ struct AccountDetailView: View {
             directDepositsSection
         }
         .navigationTitle(account.bankName)
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
@@ -268,7 +268,7 @@ private struct AccountRemindersScreen: View {
             onAddReminder: { isPresentingAdd = true }
         )
         .navigationTitle("\(account.bankName) Reminders")
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {

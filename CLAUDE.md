@@ -203,6 +203,69 @@ ChurnApp/ChurnApp/
 ChurnAppTests/                 — XCTest target (create if missing)
 ```
 
+## Round 2 changes (post-first-pass feedback) — read before touching Models/ or onboarding
+
+The app's center of gravity shifted after the first pass: this is a
+**paycheck-routing app first, bonus-tracker second.** The user's own words:
+"the overall focus of this app should be routing money from the employer's
+Direct Deposit function to the proper bank accounts." Concretely:
+
+- **`Bank` entity** (new) — id, name, createdAt. Represents Chase/Wells
+  Fargo/SoFi/etc. as a real row, not a free-text string, so "am I eligible
+  for this offer based on my last bonus from this bank" is a real
+  relationship lookup instead of fuzzy string matching.
+  **Additive, not a replacement:** `Account.bankName: String` and
+  `Offer.bankName: String` stay exactly as they are (everything built in
+  round 1 reads them) — add `Account.bank: Bank?` and `Offer.bank: Bank?`
+  (both nullify) alongside. A Bank picker component finds-or-creates a
+  `Bank` row by case-insensitive name match and keeps `bankName` in sync
+  when one is selected. `CalculationService.isEligible` should prefer
+  `account.bank`-relationship matching when both accounts have a `Bank`
+  set, falling back to the existing bankName string match for
+  legacy/no-bank-set accounts — don't drop the fallback, don't require a
+  migration.
+- **`Account.isHomeAccount: Bool`** (new, default false) — the account(s)
+  that persist as the "home base" everything else routes around. Multiple
+  allowed (the user has checking + savings at two different banks) — don't
+  add a single-home-account constraint.
+- **`Paycheck` entity** (new) — id, person (to-one `Person`, cascade —
+  deleting a person deletes their paycheck history), payDate (Date),
+  totalAmountDecimal (typed accessor over `NSDecimalNumber`, same pattern
+  as every other money field), createdAt/updatedAt. Represents one income
+  event: "$2,400 from Person A on Sep 30."
+  **`DirectDeposit` gets a new `paycheck: Paycheck?` relationship (cascade
+  from Paycheck's side — deleting a paycheck deletes its split rows).**
+  Keep `DirectDeposit.account` and `DirectDeposit.person` exactly as they
+  are (nullify, unchanged) — don't remove or repurpose them, existing views
+  (Home, Calendar, AccountDetailView) already read them directly and this
+  is additive, not a rename.
+  A paycheck's **unallocated remainder** = `totalAmountDecimal - sum(deposit.amountDecimal for deposits where deposit.paycheck == self)`.
+  This is *computed*, never stored, and the UI should present it as
+  "→ [home account]" rather than requiring the user to manually create a
+  DirectDeposit row for it.
+- **Last-4-only, already correct at the schema level** (`Account.accountNumberLast4`)
+  — this round is about UI emphasis, not a data model change: make it a
+  prominent, clearly-labeled field (not buried as an optional detail), and
+  it's the field a user cross-references against the last 4 shown on their
+  physical paystub when assigning a DirectDeposit split to an account.
+- **Onboarding entry point changes.** First run (no `Person` exists yet)
+  should offer "Add Paycheck" as the primary CTA, which opens
+  `PersonSetupView` — income profile (pay frequency, amount, next date)
+  comes before any bank account exists. After a person is saved, the
+  natural next step is assigning that paycheck's split across accounts
+  (the new Paycheck-creation flow) — not "add a bank account" as the first
+  thing a new user sees.
+- **`HomeView` must always render the earnings carousel**, even at $0 —
+  never fall back to a full-screen empty state that hides it. Only the
+  sub-sections (Active Promotions, Maintaining) get their own empty states.
+  Showing what looks like an "add bank account" wall on first launch reads
+  as the app being about bank data instead of money coming in — it should
+  read as the latter from the first screen.
+- **Calendar's empty state text is "No Paychecks Scheduled"** (was "No
+  Direct Deposits Scheduled") and the view should group by `Paycheck`
+  (payDate + person + total, with its DirectDeposit splits underneath and
+  the computed remainder), not a flat list of individual DirectDeposit rows.
+
 ## Explicitly out of scope for this build
 
 - Vertical Gantt chart with visual DD connectors (Calendar tab ships as a
