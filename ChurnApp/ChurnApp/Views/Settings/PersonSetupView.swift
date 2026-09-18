@@ -40,7 +40,16 @@ struct PersonSetupView: View {
     /// Round 2: "onboarding entry point" per CLAUDE.md. Editing an existing
     /// person never triggers this; there's nothing "next" about an edit.
     @State private var savedPerson: Person?
-    @State private var isPresentingAddPaycheck = false
+
+    /// Dedicated target for the paycheck-setup sheet, set directly (and only)
+    /// from the "Set Up First Paycheck" button's own action. Deliberately
+    /// NOT derived from `savedPerson` + `isPresentingAddPaycheck` — that
+    /// combination raced against the confirmation dialog's own
+    /// dismiss-driven binding (which nils `savedPerson` as a side effect of
+    /// dismissing) and could open the sheet with the `if let` already
+    /// failing, producing a blank modal. `.sheet(item:)` keyed on this gives
+    /// the sheet a presentation lifecycle fully independent of the dialog's.
+    @State private var personForPaycheckSheet: Person?
 
     /// Round 4: "Delete Person" is a *soft* delete (`person.isArchived = true`),
     /// never `context.delete(person)` — see CLAUDE.md. History must survive.
@@ -80,8 +89,16 @@ struct PersonSetupView: View {
         .toolbarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
+                // `savedPerson != nil` means this "add" session already
+                // created its Person (the "set up first paycheck?" dialog is
+                // up or was just dismissed). Without this guard, dismissing
+                // that dialog by tapping outside it (not "Set Up First
+                // Paycheck" or "Later") leaves this fully-filled form
+                // sitting there with Save still enabled — a second tap
+                // would run the add-mode branch of `save()` again and
+                // insert a duplicate `Person` from the same session.
                 Button("Save") { save() }
-                    .disabled(!isValid)
+                    .disabled(!isValid || savedPerson != nil)
             }
         }
         .onAppear(perform: populateFromExistingPerson)
@@ -97,7 +114,13 @@ struct PersonSetupView: View {
             titleVisibility: .visible
         ) {
             Button("Set Up First Paycheck") {
-                isPresentingAddPaycheck = true
+                // Capture into the sheet's own dedicated state directly from
+                // `savedPerson`, which is known non-nil here (this dialog
+                // only shows when it is) — not through the dialog's
+                // presentation binding, so the sheet's identity can't be
+                // undone by that binding's `set` nil-ing `savedPerson` out
+                // from under it.
+                personForPaycheckSheet = savedPerson
             }
             Button("Later", role: .cancel) {
                 dismiss()
@@ -105,10 +128,8 @@ struct PersonSetupView: View {
         } message: {
             Text("Want to set up \(savedPerson?.name ?? "their") first paycheck now?")
         }
-        .sheet(isPresented: $isPresentingAddPaycheck, onDismiss: { dismiss() }) {
-            if let savedPerson {
-                AddEditPaycheckView(person: savedPerson, paycheck: nil)
-            }
+        .sheet(item: $personForPaycheckSheet, onDismiss: { dismiss() }) { person in
+            AddEditPaycheckView(person: person, paycheck: nil)
         }
         // Reassurance is the whole point of this dialog: the user is pressing
         // a destructive-looking button and needs to know their bookkeeping

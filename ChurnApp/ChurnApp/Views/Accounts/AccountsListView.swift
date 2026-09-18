@@ -113,7 +113,13 @@ struct AccountsListView: View {
 
         switch sortOption {
         case .openingDate:
-            return filtered.sorted { $0.openingDate < $1.openingDate }
+            // Round 5: was ascending (oldest first), which sank a
+            // brand-new account (today's `openingDate`) to the bottom of
+            // the list — the opposite of what a user expects right after
+            // creating one, and the opposite of this file's header comment
+            // ("accounts that need attention float to the top"). Newest
+            // first instead.
+            return filtered.sorted { $0.openingDate > $1.openingDate }
         case .finishDate:
             // Documented choice (CLAUDE.md leaves this to the implementer):
             // "finish date" = `expectedBonusDate`, falling back to

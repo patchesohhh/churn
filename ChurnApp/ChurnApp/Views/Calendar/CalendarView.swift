@@ -60,6 +60,26 @@
 //    are **never written to Core Data** — only tapping "Create this
 //    paycheck" on one turns it into a real, persisted `Paycheck` +
 //    `DirectDeposit` rows.
+//  - ROUND 5 FIX — materializing a projection must retire it. Once a
+//    projected occurrence is turned into a real `Paycheck` (via
+//    `materialize(_:)` below), this generation loop has no memory of that —
+//    it re-derives the same `projectionCount` occurrences from
+//    `person.paycheckAmountDecimal`/`nextPaycheckDate` every time `body`
+//    re-evaluates, so without a guard the slot the user just materialized
+//    would get re-projected and show up a second time, dashed "Projected"
+//    badge and all, right alongside the real row it came from. Fix: after
+//    generating a person's occurrences, drop any whose date already has a
+//    matching real `Paycheck` for that same person — see
+//    `isAlreadyReal(payDate:person:)`. The match uses day tolerance, not
+//    exact-date equality, because `advance(_:by:)` below is itself an
+//    approximation (the semimonthly flat 15-day step is the clearest
+//    example) — a real paycheck logged a day or two off from the
+//    theoretical projected date is still "this slot," not a coincidentally
+//    nearby unrelated paycheck. Reuses
+//    `AutomaticNotificationService.ddMatchToleranceDays` rather than
+//    inventing a second tolerance constant — that service documents the
+//    identical rationale (approximate stepping vs. a real logged date) for
+//    the same underlying projection math.
 //
 
 import CoreData
@@ -414,7 +434,29 @@ struct CalendarView: View {
             }
         }
 
-        return results
+        // Round 5 fix: drop any generated occurrence that's already been
+        // materialized into a real Paycheck (see the file header comment).
+        // Filtering once at the end, rather than guarding inside the loop
+        // above, keeps the generation math itself untouched and makes the
+        // "what got removed and why" logic a single, easy-to-read pass.
+        return results.filter { !isAlreadyReal(payDate: $0.payDate, person: $0.person) }
+    }
+
+    /// True when a real, persisted `Paycheck` already exists for this person
+    /// within `AutomaticNotificationService.ddMatchToleranceDays` of
+    /// `payDate` — i.e. this projected slot has already been materialized
+    /// and must not be projected again. Compares against `paychecks`
+    /// (this view's own real-paycheck fetch), not `person.paychecksArray`,
+    /// so a paycheck inserted-but-not-yet-saved this session (there isn't
+    /// one mid-materialize, but this keeps the source of truth singular)
+    /// still counts — both ultimately read the same context.
+    private func isAlreadyReal(payDate: Date, person: Person) -> Bool {
+        let calendar = Calendar.current
+        return paychecks.contains { paycheck in
+            guard paycheck.person.id == person.id else { return false }
+            let days = calendar.dateComponents([.day], from: paycheck.payDate, to: payDate).day ?? Int.max
+            return abs(days) <= AutomaticNotificationService.ddMatchToleranceDays
+        }
     }
 
     /// Steps a date forward by one pay period for the given frequency.
@@ -723,6 +765,82 @@ private struct ProjectedPaycheckRow: View {
     homeAccount.createdAt = Date()
     homeAccount.updatedAt = Date()
     homeAccount.person = person
+
+    return CalendarView()
+        .environment(\.managedObjectContext, context)
+        .environment(AppTabSelection())
+}
+
+#Preview("Materialized slot doesn't double-project (round 5 fix)") {
+    // The exact reported bug: a person whose `nextPaycheckDate` lines up
+    // with a real, already-logged `Paycheck` (as it would immediately after
+    // tapping a projected entry's "Create this Paycheck"). Before the fix,
+    // `projectedPaychecks` had no way to know that slot was now real, so it
+    // kept generating a projected occurrence for the same date — the
+    // Calendar showed both the real row and a dashed "Projected" row for
+    // what should read as a single upcoming paycheck. Also seeds a second
+    // real paycheck a couple of days off the theoretical next-next
+    // occurrence to exercise the day-tolerance matching, not just an exact
+    // date match. Confirm in the canvas: exactly one entry per pay period,
+    // no dashed duplicate sitting next to the real one.
+    let controller = PersistenceController(inMemory: true)
+    let context = controller.container.viewContext
+
+    let person = Person(context: context)
+    person.id = UUID()
+    person.name = "Taylor"
+    person.payFrequency = PayFrequency.biweekly.rawValue
+    person.paycheckAmount = NSDecimalNumber(string: "2200.00")
+    let nextDate = Calendar.current.date(byAdding: .day, value: 5, to: Date()) ?? Date()
+    person.nextPaycheckDate = nextDate
+    person.maxConcurrentDirectDeposits = 3
+    person.createdAt = Date()
+    person.updatedAt = Date()
+
+    let homeAccount = Account(context: context)
+    homeAccount.id = UUID()
+    homeAccount.bankName = "Ally"
+    homeAccount.accountNumberLast4 = "9042"
+    homeAccount.accountType = AccountType.checking.rawValue
+    homeAccount.openingDate = Date()
+    homeAccount.bonusAmount = NSDecimalNumber(string: "0")
+    homeAccount.bonusStructure = BonusStructure.lumpSum.rawValue
+    homeAccount.bonusRequirements = ""
+    homeAccount.accountStatus = AccountStatus.open.rawValue
+    homeAccount.eligibilityMonths = 12
+    homeAccount.isArchived = false
+    homeAccount.isHomeAccount = true
+    homeAccount.isChurnAccount = false
+    homeAccount.createdAt = Date()
+    homeAccount.updatedAt = Date()
+    homeAccount.person = person
+
+    // The "materialized" paycheck for the very next projected slot, dated
+    // exactly at `nextPaycheckDate` — the same date `materialize(_:)` would
+    // have written had the user actually tapped the first projected row.
+    let realPaycheck = Paycheck(context: context)
+    realPaycheck.id = UUID()
+    realPaycheck.payDate = nextDate
+    realPaycheck.totalAmountDecimal = Decimal(2200)
+    realPaycheck.createdAt = Date()
+    realPaycheck.updatedAt = Date()
+    realPaycheck.person = person
+    realPaycheck.remainderAccount = homeAccount
+
+    // A second real paycheck 2 days off the theoretical next-next
+    // occurrence (14 days later, biweekly) — within
+    // `AutomaticNotificationService.ddMatchToleranceDays` (4), so it should
+    // also suppress its slot despite not landing on the exact stepped date.
+    let secondOccurrenceDate = Calendar.current.date(byAdding: .day, value: 14, to: nextDate) ?? nextDate
+    let offsetDate = Calendar.current.date(byAdding: .day, value: 2, to: secondOccurrenceDate) ?? secondOccurrenceDate
+    let secondRealPaycheck = Paycheck(context: context)
+    secondRealPaycheck.id = UUID()
+    secondRealPaycheck.payDate = offsetDate
+    secondRealPaycheck.totalAmountDecimal = Decimal(2200)
+    secondRealPaycheck.createdAt = Date()
+    secondRealPaycheck.updatedAt = Date()
+    secondRealPaycheck.person = person
+    secondRealPaycheck.remainderAccount = homeAccount
 
     return CalendarView()
         .environment(\.managedObjectContext, context)

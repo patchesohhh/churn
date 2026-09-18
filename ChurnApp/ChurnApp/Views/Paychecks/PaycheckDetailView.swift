@@ -21,7 +21,33 @@ struct PaycheckDetailView: View {
     @State private var isPresentingEdit = false
     @State private var isPresentingDeleteConfirm = false
 
+    /// Set the instant `delete()` starts, *before* the managed object is
+    /// actually removed. `paycheck` is `@ObservedObject`, so deleting it
+    /// fires `objectWillChange` and forces a `body` re-render before
+    /// `dismiss()` has torn the view down — without this guard that
+    /// re-render reads `paycheck.payDate` / `paycheck.person.name` on a
+    /// now-deleted (faulted) managed object and crashes. Also checked via
+    /// `paycheck.isDeleted`/`managedObjectContext == nil` as a second
+    /// signal, in case something else deletes this object out from under
+    /// the view without going through this view's own `delete()`.
+    @State private var isBeingDeleted = false
+
+    private var isPaycheckGone: Bool {
+        isBeingDeleted || paycheck.isDeleted || paycheck.managedObjectContext == nil
+    }
+
     var body: some View {
+        if isPaycheckGone {
+            // Deliberately touch nothing on `paycheck` here — render a
+            // minimal placeholder while `dismiss()` finishes tearing the
+            // view down, instead of the real content that would fault.
+            Color.clear
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
         List {
             headerSection
             splitsSection
@@ -205,6 +231,12 @@ struct PaycheckDetailView: View {
     // MARK: - Actions
 
     private func delete() {
+        // Flip the guard *before* touching Core Data — see `isBeingDeleted`'s
+        // doc comment. This makes the forced re-render triggered by
+        // `viewContext.delete(paycheck)` below render the placeholder in
+        // `body` instead of re-reading properties on a faulted object.
+        isBeingDeleted = true
+
         // Cascade: deleting the paycheck takes its DirectDeposit splits
         // with it (Paycheck.directDeposits is the cascade side).
         viewContext.delete(paycheck)

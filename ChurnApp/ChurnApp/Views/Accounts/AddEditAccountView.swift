@@ -34,6 +34,12 @@ struct AddEditAccountView: View {
 
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
+    /// Round 5: only used when this sheet was opened via "Open Account" on
+    /// an Offer (`prefillFrom != nil`) — after a successful save the user
+    /// should land on the Accounts tab looking at their new account, not
+    /// stay wherever the sheet was presented from (Offers). Plain "Add
+    /// Account" saves are unaffected — see `save()`.
+    @Environment(AppTabSelection.self) private var tabSelection
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Person.name, ascending: true)],
@@ -444,6 +450,19 @@ struct AddEditAccountView: View {
 
         do {
             try viewContext.save()
+            // Round 5: "Open Account" from an Offer is presented from the
+            // Offers tab, but the user's mental model is "I just opened this
+            // account" — they expect to land on the Accounts tab and see it.
+            // Switch tabs *before* dismissing: dismissing first would leave
+            // a one-frame flash of the still-visible Offers detail behind
+            // the closing sheet; setting `tabSelection.selected` first means
+            // the tab switch and the sheet's dismiss animation resolve
+            // together and the user simply arrives on Accounts. A plain
+            // "Add Account" (no `prefillFrom`) keeps the old behavior —
+            // just dismiss back to wherever it was opened from.
+            if prefillFrom != nil {
+                tabSelection.selected = .accounts
+            }
             dismiss()
         } catch {
             assertionFailure("Failed to save account: \(error)")
@@ -456,6 +475,7 @@ struct AddEditAccountView: View {
 #Preview("New account") {
     AddEditAccountView(account: nil)
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Edit existing account") {
@@ -464,6 +484,7 @@ struct AddEditAccountView: View {
 
     return AddEditAccountView(account: account)
         .environment(\.managedObjectContext, context)
+        .environment(AppTabSelection())
 }
 
 #Preview("Edit non-churn home account") {
@@ -473,6 +494,7 @@ struct AddEditAccountView: View {
 
     return AddEditAccountView(account: account)
         .environment(\.managedObjectContext, context)
+        .environment(AppTabSelection())
 }
 
 #Preview("Prefilled from an offer") {
@@ -483,15 +505,18 @@ struct AddEditAccountView: View {
 
     return AddEditAccountView(account: nil, prefillFrom: offer)
         .environment(\.managedObjectContext, context)
+        .environment(AppTabSelection())
 }
 
 #Preview("No people yet") {
     AddEditAccountView(account: nil)
         .environment(\.managedObjectContext, PersistenceController(inMemory: true).container.viewContext)
+        .environment(AppTabSelection())
 }
 
 #Preview("Dark mode") {
     AddEditAccountView(account: nil)
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        .environment(AppTabSelection())
         .preferredColorScheme(.dark)
 }
