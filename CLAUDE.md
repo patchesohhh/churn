@@ -408,6 +408,83 @@ Direct Deposit function to the proper bank accounts." Concretely:
   partially-allocated sample) — `alexPaycheck` deliberately keeps a nil
   `remainderAccount` so previews cover the "no destination set" state too.
 
+## Round 4 changes — read before touching Home/Calendar/Settings/Offers/Accounts or Services/
+
+- **Carousel centering bug.** The round 3 carousel (`Views/Home/HomeView.swift`,
+  `earningsCarousel`) uses a `GeometryReader` to manually compute
+  `cardWidth`/`sidePadding` and applies `.safeAreaPadding(.horizontal:)` +
+  `.scrollTargetBehavior(.viewAligned)`. In practice it doesn't center —
+  the previous card's trailing ~2/3 shows on the left and the current
+  card is squeezed into the right third. Likely cause: `.viewAligned`
+  snaps an item's *leading* edge to the content area's leading inset by
+  default — it doesn't automatically center an item just because the
+  leading/trailing insets are equal. Apple's documented pattern for a
+  "one item centered, neighbors peeking" carousel uses
+  `.containerRelativeFrame(.horizontal, count:span:spacing:)` for the
+  item width instead of manual `GeometryReader` math — try that approach
+  first. **Whoever fixes this must visually verify with a simulator
+  screenshot before calling it done — a green build proves nothing about
+  whether it actually looks centered.**
+- **Calendar projection must not require an existing real `Paycheck`.**
+  Round 3's projection only generated future entries for a person who
+  already had at least one real, persisted `Paycheck` (to repeat its
+  split pattern) — which is backwards from the actual intent: the whole
+  point of `Person` setup (net pay + one pay date + frequency) is to
+  project indefinitely *from that alone*, before the user has ever logged
+  a real paycheck. Fix: when a person has zero real paychecks, project
+  using `person.paycheckAmountDecimal` as the total with **100% going to
+  the remainder** (no explicit splits — there's no pattern to repeat yet).
+  Once they have at least one real paycheck, keep repeating its most
+  recent split pattern as before. This is also why person #2's schedule
+  wasn't showing — they likely have zero logged paychecks yet, which is
+  the exact case that must now work.
+- **Historical immutability — this is a hard invariant, not just a
+  round-4 fix.** A real, persisted `Paycheck`'s `totalAmountDecimal` and
+  its `DirectDeposit` splits are a snapshot taken at creation/edit time.
+  **Nothing may ever recompute or overwrite a past `Paycheck` from
+  current `Person`/`Account` data** — e.g. a `Person`'s pay raise must
+  only affect *future* projected/new paychecks, never rewrite a paycheck
+  that already happened. This was already true structurally (nothing
+  reads `person.paycheckAmountDecimal` to redraw an existing `Paycheck`),
+  but treat it as a rule to actively preserve, not an accident to
+  maintain.
+- **Deleting a `Person` is a soft delete (`Person.isArchived: Bool`,
+  default false), not a real Core Data delete.** The user needs to still
+  see a deleted person's past paychecks and direct deposits — flipping
+  `Person.paychecks`/`Paycheck.person` to nullify-and-optional to survive
+  a hard delete would ripple through every place that currently reads
+  `paycheck.person.name` as non-optional (Home, Calendar, Paycheck views)
+  for comparatively little benefit over just archiving. Archived persons
+  should stop appearing in "current" pickers (new account's person
+  picker, new paycheck's person picker/quick-action) and stop generating
+  new projected paychecks in Calendar, but their historical
+  `Person`/`Paycheck`/`DirectDeposit`/`Account` rows are untouched and
+  still fully visible. "Delete Person" in `PersonSetupView` sets this
+  flag (with a confirmation explaining it keeps history intact) rather
+  than calling `context.delete(person)`.
+- **"Open Account" from an `Offer`.** `OfferDetailView` gets a button
+  that opens `AddEditAccountView` pre-filled from the offer (bank,
+  `bonusAmountDecimal`, `bonusStructureValue`, `bonusRequirements`,
+  `eligibilityRestrictionMonths`, and `account.offer = offer` so the link
+  persists) — the user only has to supply the account number's last 4 and
+  the opening date (and a person, if not inferable) to finish.
+- **Automatic notifications, first pass — additive alongside the
+  existing manual `Reminder` feature (not a replacement — user confirmed
+  keep both).** Derive notification triggers from data that already
+  exists rather than requiring the user to create anything:
+  - DD series complete for an account (its `directDepositProgress`
+    reaches `total`, or `actualBonusDate` gets set) → "time to close it"
+    style notification.
+  - N days before a person's `nextPaycheckDate` (or their next projected
+    paycheck) → "have you updated your direct deposit?" — **only if**
+    the relevant data doesn't already show it's been handled (e.g.
+    don't nag if this period's `DirectDeposit` rows already exist/are
+    updated).
+  These are scheduled/refreshed automatically (e.g. on relevant Core
+  Data saves), not something the user sets up — that's the whole point
+  versus the manual `Reminder` feature, which stays available for
+  anything the automatic rules don't cover.
+
 ## Explicitly out of scope for this build
 
 - Vertical Gantt chart with visual DD connectors (Calendar tab ships as a
