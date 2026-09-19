@@ -1,5 +1,10 @@
 # Churn — iOS bank-bonus tracker — Project Instructions
 
+**Resuming after a pause? Read `PROJECT_STATUS.md` first** — it's the
+human-readable summary of what's built, why, and what's next. This file is
+the detailed build reference (exact schema, conventions, round-by-round
+decisions) for once you're actually writing code.
+
 Native SwiftUI + Core Data app for tracking cash bonuses from bank account
 opening promotions ("churning"), including a dual-income household's direct
 deposit scheduling. Solo indie project, MVP scope, no backend — **all data
